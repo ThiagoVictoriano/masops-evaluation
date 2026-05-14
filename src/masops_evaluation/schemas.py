@@ -20,7 +20,18 @@ DecidedBy = Literal["detective", "fixer_guardian_loop"]
 PatchLabel = Literal["resolved", "not_resolved", "error"]
 AlternativeLabel = Literal["resolved", "not_resolved", "error", "none"]
 ConfusionCell = Literal["TP", "TN", "FP", "FN"]
-PatchSource = Literal["gold", "trajectory", "synthetic"]
+PatchSource = Literal[
+    "gold",
+    "synthetic_remove_addition",
+    "synthetic_invert_conditional",
+    "synthetic_expand_scope",
+    "synthetic_remove_critical_line",
+]
+
+# High-level patch source class selected on the CLI; resolved per-execution to
+# a concrete :data:`PatchSource` (a synthetic class picks one of the four
+# concrete mutation types).
+PatchSourceClass = Literal["gold", "synthetic"]
 
 
 # --- Request schemas --------------------------------------------------------

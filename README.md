@@ -201,13 +201,123 @@ change.
 
 ### Useful flags
 
-- `run-evaluation --resume` skips `(instance, repetition)` pairs that already
-  have a result file under `results/{rodada_id}/`.
+- `run-evaluation --resume` skips `(instance, repetition, source)` triples
+  that already have a result file under `results/{rodada_id}/`.
 - `run-evaluation --instance-ids django__django-11848 ...` runs a custom
   subset (handy for pilots and debugging) — overrides the selection file.
-- `run-evaluation --patch-source gold` is the only source implemented today.
-  `trajectory` and `synthetic` are wired into the CLI but raise
-  `NotImplementedError` until the corresponding data pipelines land.
+- `run-evaluation --patch-sources gold,synthetic --patches-per-case 2`
+  (the defaults) evaluates one gold patch and one synthetic mutation per
+  `(instance, repetition)`. Pass `--patch-sources gold` to evaluate gold
+  only; pass `--patches-per-case 4` to expand the per-case fan-out (the
+  schedule round-robins the listed sources).
+
+---
+
+## Patch sources
+
+The framework supports two patch source classes, selected via
+`--patch-sources`:
+
+### `gold`
+
+The pristine SWE-bench gold patch — the human-authored fix that ships with
+the dataset. By construction the harness labels these as `resolved`, so
+they probe **True Positive** and **False Negative** behaviour: does
+MAS-Ops correctly approve a good fix, or does it spuriously reject it?
+
+### `synthetic`
+
+A deterministic mutation of the gold patch produced by
+[`mutations.py`](src/masops_evaluation/mutations.py). Each mutation
+exercises a specific defect class that the Guardian should catch:
+
+| Mutation (`MutationType`) | What it changes                                                                  | Defect class probed                       |
+|---------------------------|----------------------------------------------------------------------------------|-------------------------------------------|
+| `remove_addition`         | Removes one random `+` line.                                                     | Incomplete fix.                           |
+| `invert_conditional`      | Flips one `==/!=/</>/<=/>=/and/or/is/is not` in an added line.                   | Inverted logic.                           |
+| `expand_scope`            | Appends an unrelated new-file modification on top of the gold patch.             | Scope discipline.                         |
+| `remove_critical_line`    | Removes the most load-bearing `+` line (heuristic: `return`/`raise`/`assert`, else longest). | Effect-less fix. |
+
+When `synthetic` is selected, the mutation type cycles across the rodada
+to balance attempts across the four classes. The concrete type chosen for
+each execution is recorded in `candidate_patch_source` as one of
+`synthetic_remove_addition`, `synthetic_invert_conditional`,
+`synthetic_expand_scope`, or `synthetic_remove_critical_line`.
+
+Each mutation is deterministic given `(gold_patch, seed)`, where the seed
+is derived from `(rodada_id, instance_id, repetition, mutation_type)` —
+rerunning the rodada with the same coordinates reproduces the same
+mutated diffs.
+
+**Methodological note on `expand_scope`.** This mutation preserves the
+original fix and adds an unrelated change, so the harness may still label
+the result as `resolved`. That is expected: `expand_scope` is a scope-
+discipline test rather than a clean negative case, and the aggregator's
+"Detection by mutation type" table tracks both outcomes separately.
+
+### `trajectory` (future work)
+
+Real failed-agent trajectories from the public
+[`SWE-bench/experiments`](https://github.com/SWE-bench/experiments) corpus
+and similar sources (SWE-agent / Aider / OpenHands submissions) would
+yield more authentic negative examples than synthetic mutations. That
+data pipeline is **not implemented yet** — it is left as future work
+because it requires curating, normalising, and licensing external
+submission corpora.
+
+---
+
+## Cost considerations
+
+The reference rodada is sized to fit inside a **~$20 USD** API budget,
+which constrains how many cases and how many MAS-Ops sub-agents we can
+afford to invoke per rodada.
+
+### Defaults aligned with the budget
+
+- **10 cases × 2 sources × 1 repetition = 20 executions per rodada.**
+  Defaults: `select-instances --n-per-difficulty 4` (12 candidates,
+  10 used by `run-evaluation` plus 2 reserve); `run-evaluation
+  --max-cases 10 --repetitions 1 --patches-per-case 2`.
+- **Communicator is expected to be disabled** in eval mode on the
+  MAS-Ops side via `EVAL_INVOKE_COMMUNICATOR=false` in EC2-mas-ops'
+  `.env`. Communicator output adds tokens without changing the
+  decision, so disabling it materially reduces cost per request.
+- **Estimated rodada cost: $7–$14 USD** with the documented model
+  assignment (Gemini 3.1 Pro Preview for Detective/Fixer, Claude Sonnet
+  4.6 for both Guardian loops and the Executor). The aggregator's
+  *Experimental configuration* section prints the post-hoc estimate
+  using `MODEL_PRICING_USD_PER_MTOK` in
+  [`aggregate_results.py`](src/masops_evaluation/aggregate_results.py).
+- Margin for **one or two additional rodadas** (e.g. another 10–15
+  cases, or one repetition more) is intentional — leave headroom in case
+  a debug rodada is needed.
+
+### Abort-on-budget behaviour
+
+`run-evaluation` watches for budget signals in MAS-Ops error responses:
+HTTP `402`/`429`, or any error message containing `billing`, `credit`,
+or `quota` (case-insensitive). When any of those is detected, the
+rodada writes the failed record, marks `aborted=true` and
+`abort_reason` in `manifest.json`, and exits non-zero. All other
+errors (timeouts, 5xx, network issues) only emit an `error_message`
+on the record and let the rodada continue.
+
+### Recommended provider-side alerts
+
+Configure a hard cap and threshold alerts at your LLM provider
+(OpenRouter / Anthropic / Google) at **80%** and **95%** of the rodada
+budget. These run independently from this framework's abort logic and
+protect against MAS-Ops-side bugs that fail to surface upstream errors.
+
+### Pricing assumptions
+
+The cost estimate divides per-agent token totals 50/50 between input
+and output (override via `assumed_input_share` if your workload skews
+differently). Prices for known models live in
+`MODEL_PRICING_USD_PER_MTOK` and need to be updated as upstream
+pricing changes. Agents whose tokens land outside that dict (or whose
+model assignment is unknown) are reported with an `n/a` cost cell.
 
 ---
 
@@ -225,7 +335,7 @@ masops-evaluation/
 ├── results/                          # per-execution JSONs (gitignored)
 │   └── {rodada_id}/
 │       ├── manifest.json
-│       └── {instance_id}__rep-{n}.json
+│       └── {instance_id}__rep-{n}__src-{source}.json
 ├── consolidated/                     # aggregator outputs (gitignored)
 │   └── {rodada_id}/
 │       ├── report.md
@@ -238,11 +348,13 @@ masops-evaluation/
 │       ├── schemas.py                # Pydantic models + ExecutionRecord
 │       ├── harness_client.py         # SWE-bench harness wrapper
 │       ├── masops_client.py          # HTTP client for MAS-Ops
+│       ├── mutations.py              # Deterministic synthetic patch mutations
 │       ├── select_instances.py       # CLI: select-instances
 │       ├── run_evaluation.py         # CLI: run-evaluation
 │       └── aggregate_results.py      # CLI: aggregate-results
 └── tests/
-    └── test_schemas.py               # Pydantic round-trip tests
+    ├── test_schemas.py               # Pydantic round-trip tests
+    └── test_mutations.py             # Mutation determinism + diff validity tests
 ```
 
 ---
@@ -255,9 +367,9 @@ masops-evaluation/
 - **Partial cost coverage.** `tokens_by_agent` excludes Executor (Claude
   Agent SDK) and Communicator (langchain). For end-to-end token accounting,
   consult Langfuse traces on EC2-mas-ops.
-- **Patch sources beyond `gold`.** `trajectory` and `synthetic` patch
-  pipelines are not implemented yet; the CLI raises `NotImplementedError`
-  when those modes are selected.
+- **Patch sources beyond `gold` and `synthetic`.** Real failed-agent
+  `trajectory` data is not wired up yet; see the "Patch sources" section
+  for the motivation.
 - **Aggregator narrative is a stub.** `generate_executive_summary`,
   `generate_qualitative_observations`, and `summarize_notable_cases` are
   wired but contain `TODO` prompts — they emit placeholders until that

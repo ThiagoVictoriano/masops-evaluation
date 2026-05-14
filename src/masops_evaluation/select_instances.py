@@ -6,7 +6,11 @@ We collapse the upstream labels into three buckets — ``easy``, ``medium``,
 fixed seed so the selection is reproducible across runs.
 
 The selection is written to JSON for downstream consumption by
-``run-evaluation``.
+``run-evaluation``. The default ``--n-per-difficulty`` is sized for the
+budget-constrained reference rodada (4 per bucket × 3 buckets = 12
+instances; ``run-evaluation`` consumes the first 10 by default via
+``--max-cases``, leaving 2 as overflow reserve for manual replacement
+when a case fails the pipeline end to end).
 """
 
 from __future__ import annotations
@@ -156,6 +160,28 @@ def select_instances(
     output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     console.log(f"[select] wrote {output_path}")
     _render_table(sampled, n_per_difficulty)
+
+    # Overflow / reserve advisory — the framework's default --max-cases is 10.
+    DEFAULT_MAX_CASES = 10
+    total = len(all_ids)
+    if total > DEFAULT_MAX_CASES:
+        reserve = total - DEFAULT_MAX_CASES
+        console.log(
+            f"[select] selection has {total} instances; the default rodada uses the "
+            f"first {DEFAULT_MAX_CASES} (via run-evaluation --max-cases). "
+            f"The remaining {reserve} are reserved for manual replacement if a "
+            "case fails the pipeline end-to-end."
+        )
+    elif total < DEFAULT_MAX_CASES:
+        console.log(
+            f"[select] selection has only {total} instances — below the default "
+            f"--max-cases of {DEFAULT_MAX_CASES}. The full selection will be used "
+            "and there is no overflow reserve."
+        )
+    else:
+        console.log(
+            f"[select] selection has exactly {total} instances; no overflow reserve."
+        )
     return payload
 
 
@@ -166,8 +192,13 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--n-per-difficulty",
         type=int,
-        default=15,
-        help="Instances to sample per bucket (default: 15).",
+        default=4,
+        help=(
+            "Instances to sample per bucket (default: 4). "
+            "Total selection size = N * 3 buckets. With the default, "
+            "run-evaluation will use the first 10 instances and keep 2 "
+            "as an overflow reserve for manual replacement."
+        ),
     )
     parser.add_argument("--seed", type=int, default=42, help="Random seed (default: 42).")
     parser.add_argument(
