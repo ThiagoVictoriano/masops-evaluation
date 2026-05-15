@@ -193,7 +193,7 @@ Three commands, in order:
 
 ```bash
 # 1. Select instances stratified by difficulty (one-off per study).
-select-instances --n-per-difficulty 15 --seed 42
+select-instances --seed 42
 
 # 2. Run the rodada (sequential; resumable).
 run-evaluation --rodada-id v1 --repetitions 3
@@ -276,29 +276,28 @@ submission corpora.
 
 ## Cost considerations
 
-The reference rodada is sized to fit inside a **~$20 USD** API budget,
+The reference rodada is sized to fit inside a **~$50 USD** API budget,
 which constrains how many cases and how many MAS-Ops sub-agents we can
 afford to invoke per rodada.
 
 ### Defaults aligned with the budget
 
-- **10 cases × 2 sources × 1 repetition = 20 executions per rodada.**
-  Defaults: `select-instances --n-per-difficulty 4` (12 candidates,
-  10 used by `run-evaluation` plus 2 reserve); `run-evaluation
-  --max-cases 10 --repetitions 1 --patches-per-case 2`.
+- **Initial rodada: 15 cases × 2 sources = 30 executions.**
+  Defaults: `select-instances --n-per-difficulty 6` (18 candidates,
+  15 used by `run-evaluation` plus 3 reserve); `run-evaluation
+  --max-cases 15 --repetitions 1 --patches-per-case 2`.
 - **Communicator is expected to be disabled** in eval mode on the
   MAS-Ops side via `EVAL_INVOKE_COMMUNICATOR=false` in EC2-mas-ops'
   `.env`. Communicator output adds tokens without changing the
   decision, so disabling it materially reduces cost per request.
-- **Estimated rodada cost: $7–$14 USD** with the documented model
+- **Estimated rodada cost: $10–$21 USD** with the documented model
   assignment (Gemini 3.1 Pro Preview for Detective/Fixer, Claude Sonnet
   4.6 for both Guardian loops and the Executor). The aggregator's
   *Experimental configuration* section prints the post-hoc estimate
   using `MODEL_PRICING_USD_PER_MTOK` in
   [`aggregate_results.py`](src/masops_evaluation/aggregate_results.py).
-- Margin for **one or two additional rodadas** (e.g. another 10–15
-  cases, or one repetition more) is intentional — leave headroom in case
-  a debug rodada is needed.
+- The budget leaves margin for **a second rodada of 15 additional
+  cases** for comparison or configuration tuning.
 
 ### Abort-on-budget behaviour
 

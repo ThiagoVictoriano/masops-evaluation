@@ -70,8 +70,8 @@ _ALLOWED_SOURCE_CLASSES: tuple[str, ...] = ("gold", "synthetic")
 
 # Default cap on the number of selected instances actually consumed by a
 # rodada. Aligned with the budget-constrained reference configuration
-# (~$20 of API credit). Override via ``--max-cases``.
-DEFAULT_MAX_CASES: int = 10
+# (~$50 of API credit). Override via ``--max-cases``.
+DEFAULT_MAX_CASES: int = 15
 
 # A MAS-Ops error matching this pattern halts the rodada immediately —
 # continuing would only burn more budget. Covers HTTP 402/429 plus the

@@ -7,9 +7,9 @@ fixed seed so the selection is reproducible across runs.
 
 The selection is written to JSON for downstream consumption by
 ``run-evaluation``. The default ``--n-per-difficulty`` is sized for the
-budget-constrained reference rodada (4 per bucket × 3 buckets = 12
-instances; ``run-evaluation`` consumes the first 10 by default via
-``--max-cases``, leaving 2 as overflow reserve for manual replacement
+budget-constrained reference rodada (6 per bucket × 3 buckets = 18
+instances; ``run-evaluation`` consumes the first 15 by default via
+``--max-cases``, leaving 3 as overflow reserve for manual replacement
 when a case fails the pipeline end to end).
 """
 
@@ -161,8 +161,8 @@ def select_instances(
     console.log(f"[select] wrote {output_path}")
     _render_table(sampled, n_per_difficulty)
 
-    # Overflow / reserve advisory — the framework's default --max-cases is 10.
-    DEFAULT_MAX_CASES = 10
+    # Overflow / reserve advisory — the framework's default --max-cases is 15.
+    DEFAULT_MAX_CASES = 15
     total = len(all_ids)
     if total > DEFAULT_MAX_CASES:
         reserve = total - DEFAULT_MAX_CASES
@@ -192,11 +192,11 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--n-per-difficulty",
         type=int,
-        default=4,
+        default=6,
         help=(
-            "Instances to sample per bucket (default: 4). "
+            "Instances to sample per bucket (default: 6). "
             "Total selection size = N * 3 buckets. With the default, "
-            "run-evaluation will use the first 10 instances and keep 2 "
+            "run-evaluation will use the first 15 instances and keep 3 "
             "as an overflow reserve for manual replacement."
         ),
     )
