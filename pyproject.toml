@@ -30,11 +30,18 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "pydantic>=2.6.0",
     "pydantic-settings>=2.2.0",
-    "anthropic>=0.40.0",
     "rich>=13.7.0",
 ]
 
 [project.optional-dependencies]
+# Optional: install only if you want the aggregator to produce
+# LLM-generated narrative sections (executive summary, qualitative
+# observations, notable cases). Without this extra, those sections
+# render as placeholder strings and the rest of the report works
+# normally.
+narrative = [
+    "anthropic>=0.40.0",
+]
 dev = [
     "pytest>=8.0.0",
     "pytest-cov>=4.1.0",

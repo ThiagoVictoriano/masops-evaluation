@@ -523,8 +523,22 @@ def _records_to_dataframe(records: list[ExecutionRecord]) -> pd.DataFrame:
 # --- LLM-backed narrative stubs -----------------------------------------
 
 def _anthropic_client() -> Any:
-    """Lazily build an Anthropic client; raise if key missing."""
-    from anthropic import Anthropic
+    """Lazily build an Anthropic client.
+
+    Raises:
+        RuntimeError: when either the ``anthropic`` package is not
+            installed *or* ``ANTHROPIC_API_KEY`` is not set. The
+            narrative sections are designed to be optional — callers
+            should treat any ``RuntimeError`` here as "skip the LLM
+            narrative gracefully" rather than a hard failure.
+    """
+    try:
+        from anthropic import Anthropic
+    except ImportError as exc:
+        raise RuntimeError(
+            "anthropic package is not installed; LLM narrative sections will be skipped. "
+            "Install with `pip install -e \".[narrative]\"` to enable."
+        ) from exc
 
     settings = get_settings()
     if not settings.anthropic_api_key:
@@ -532,17 +546,26 @@ def _anthropic_client() -> Any:
     return Anthropic(api_key=settings.anthropic_api_key)
 
 
+def _narrative_unavailable_message(section_name: str, reason: str) -> str:
+    """Build the standard placeholder used when an LLM narrative is skipped."""
+    return f"_{section_name} unavailable ({reason})._"
+
+
 def generate_executive_summary(metrics: dict[str, Any]) -> str:
     """Produce a 1-paragraph executive summary of the rodada.
 
     TODO: prompt engineering. Target ~150 words covering accuracy, F1,
     remediation rates, and any difficulty-stratified surprises.
+
+    When the Anthropic package is missing or ``ANTHROPIC_API_KEY`` is
+    unset, the function returns a placeholder string so the report
+    still renders end to end.
     """
     # TODO(prompt-engineering): replace stub with real prompt+model call.
     try:
         client = _anthropic_client()
-    except RuntimeError:
-        return "_Executive summary unavailable (ANTHROPIC_API_KEY not set)._"
+    except RuntimeError as exc:
+        return _narrative_unavailable_message("Executive summary", str(exc).split(";")[0])
     del client  # actual call deferred to prompt-engineering pass
     return "_Executive summary placeholder — wire up the prompt before publishing._"
 
@@ -552,12 +575,17 @@ def generate_qualitative_observations(records: list[ExecutionRecord]) -> str:
 
     TODO: prompt engineering. Sample N decisions+justifications across
     difficulty buckets and ask the model for patterns.
+
+    Returns a placeholder when the LLM is unavailable; see
+    :func:`generate_executive_summary` for the optionality contract.
     """
     # TODO(prompt-engineering): replace stub with real prompt+model call.
     try:
         _anthropic_client()
-    except RuntimeError:
-        return "_Qualitative observations unavailable (ANTHROPIC_API_KEY not set)._"
+    except RuntimeError as exc:
+        return _narrative_unavailable_message(
+            "Qualitative observations", str(exc).split(";")[0]
+        )
     del records
     return "_Qualitative observations placeholder — wire up the prompt before publishing._"
 
@@ -567,12 +595,17 @@ def summarize_notable_cases(top_failures: list[ExecutionRecord], top_successes: 
 
     TODO: prompt engineering. Use the records' justifications and harness
     labels as evidence; do not invent facts.
+
+    Returns a placeholder when the LLM is unavailable; see
+    :func:`generate_executive_summary` for the optionality contract.
     """
     # TODO(prompt-engineering): replace stub with real prompt+model call.
     try:
         _anthropic_client()
-    except RuntimeError:
-        return "_Notable-cases narrative unavailable (ANTHROPIC_API_KEY not set)._"
+    except RuntimeError as exc:
+        return _narrative_unavailable_message(
+            "Notable-cases narrative", str(exc).split(";")[0]
+        )
     del top_failures, top_successes
     return "_Notable-cases placeholder — wire up the prompt before publishing._"
 

@@ -127,8 +127,11 @@ the field is the empty dict `{}` (never `null`).
 - **Python 3.11+**.
 - **Network reachability** to the MAS-Ops EC2 on its private IP and configured
   port.
-- **Anthropic API key** — only needed for the qualitative narrative the
-  aggregator produces.
+- **Anthropic API key** — *optional*; only needed if you want the
+  aggregator to produce LLM-generated narrative sections (executive
+  summary, qualitative observations, notable cases). Skip the key and
+  the `[narrative]` extra and those sections render as placeholders;
+  every quantitative metric still computes normally.
 
 ---
 
@@ -151,6 +154,10 @@ For local development:
 python3.11 -m venv .venv
 source .venv/bin/activate          # on Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
+# Optional: add the [narrative] extra to enable Anthropic-backed
+# narrative sections in the aggregator. Skip if you do not have an
+# Anthropic API key — the rest of the framework works without it.
+# pip install -e ".[dev,narrative]"
 ```
 
 ---
@@ -173,7 +180,7 @@ Key variables (see `.env.example` for the full list):
 | `MASOPS_HEALTH_PATH`              | Path of the MAS-Ops health endpoint (default `/health`).         |
 | `SWEBENCH_DATASET`                | Hugging Face dataset id (default `princeton-nlp/SWE-bench_Verified`). |
 | `SWEBENCH_HARNESS_RUN_ID_PREFIX`  | Prefix used to build harness `run_id`s (default `eval`).         |
-| `ANTHROPIC_API_KEY`               | Required for aggregator narratives.                              |
+| `ANTHROPIC_API_KEY`               | *Optional.* Enables LLM narrative sections; leave empty to skip them. |
 | `RESULTS_DIR`                     | Where per-execution JSONs land (default `./results`).            |
 | `CONSOLIDATED_DIR`                | Where aggregator outputs land (default `./consolidated`).        |
 | `LOG_LEVEL`                       | `DEBUG` / `INFO` / `WARNING` / `ERROR`.                          |
