@@ -49,6 +49,28 @@ class Settings(BaseSettings):
     # LLM ---------------------------------------------------------------------
     anthropic_api_key: str = Field(default="", description="Anthropic API key for narratives.")
 
+    # Langfuse (read-only telemetry source for end-to-end token accounting) ---
+    langfuse_url: str = Field(
+        default="",
+        description=(
+            "Base URL of the self-hosted Langfuse instance. Defaults to "
+            "http://{masops_host}:3000 when empty (Langfuse runs alongside "
+            "MAS-Ops on the same EC2)."
+        ),
+    )
+    langfuse_public_key: str = Field(
+        default="",
+        description="Langfuse public key (Basic Auth username). Optional.",
+    )
+    langfuse_secret_key: str = Field(
+        default="",
+        description="Langfuse secret key (Basic Auth password). Optional.",
+    )
+    langfuse_project_id: str = Field(
+        default="masops-project",
+        description="Langfuse project identifier; used for logging context.",
+    )
+
     # Local paths ------------------------------------------------------------
     results_dir: Path = Field(default=Path("./results"), description="Per-execution outputs.")
     consolidated_dir: Path = Field(
@@ -75,6 +97,23 @@ class Settings(BaseSettings):
             f"/{self.masops_health_path}"
         )
         return f"{self.masops_url()}{path}"
+
+    def effective_langfuse_url(self) -> str:
+        """Return the Langfuse base URL, deriving from ``masops_host`` when unset.
+
+        Langfuse self-hosted runs on the same EC2 as MAS-Ops on port 3000, so
+        the default is computed from ``masops_host`` rather than duplicated
+        in the env file.
+        """
+        if self.langfuse_url:
+            return self.langfuse_url.rstrip("/")
+        if self.masops_host:
+            return f"http://{self.masops_host}:3000"
+        return ""
+
+    def has_langfuse_credentials(self) -> bool:
+        """Return True when both Langfuse keys are configured."""
+        return bool(self.langfuse_public_key and self.langfuse_secret_key)
 
 
 @lru_cache(maxsize=1)

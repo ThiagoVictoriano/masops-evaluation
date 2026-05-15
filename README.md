@@ -181,6 +181,10 @@ Key variables (see `.env.example` for the full list):
 | `SWEBENCH_DATASET`                | Hugging Face dataset id (default `princeton-nlp/SWE-bench_Verified`). |
 | `SWEBENCH_HARNESS_RUN_ID_PREFIX`  | Prefix used to build harness `run_id`s (default `eval`).         |
 | `ANTHROPIC_API_KEY`               | *Optional.* Enables LLM narrative sections; leave empty to skip them. |
+| `LANGFUSE_URL`                    | *Optional.* Override the Langfuse base URL (defaults to `http://{MASOPS_HOST}:3000`). |
+| `LANGFUSE_PUBLIC_KEY`             | *Optional.* Langfuse Basic Auth username. Empty disables the Langfuse-backed cost section. |
+| `LANGFUSE_SECRET_KEY`             | *Optional.* Langfuse Basic Auth password.                        |
+| `LANGFUSE_PROJECT_ID`             | *Optional.* Langfuse project identifier (default `masops-project`). |
 | `RESULTS_DIR`                     | Where per-execution JSONs land (default `./results`).            |
 | `CONSOLIDATED_DIR`                | Where aggregator outputs land (default `./consolidated`).        |
 | `LOG_LEVEL`                       | `DEBUG` / `INFO` / `WARNING` / `ERROR`.                          |
@@ -325,6 +329,35 @@ differently). Prices for known models live in
 pricing changes. Agents whose tokens land outside that dict (or whose
 model assignment is unknown) are reported with an `n/a` cost cell.
 
+### Cost tracking — two sources
+
+The aggregator renders two cost sections side by side because the
+in-process instrumentation is partial:
+
+1. **Internal estimate (`tokens_by_agent`).** Computed from
+   `ExecutionRecord.tokens_by_agent`, which only covers agents that go
+   through `llm.client.call_llm` (Detective, Fixer, Fixer Guardian,
+   Executor Guardian). It is always available and entirely local.
+2. **Real cost (Langfuse).** Computed from the self-hosted Langfuse
+   instance running on EC2-mas-ops port 3000. Langfuse captures every
+   LLM call regardless of which framework issued it, so it closes the
+   gap for the Executor (Claude Agent SDK) and Communicator
+   (`langchain.create_agent`). This section is best-effort: when
+   credentials are missing or Langfuse is unreachable the aggregator
+   skips it and logs a warning — every quantitative metric still
+   computes normally.
+
+The Executor is the most expensive agent on rejection paths and is
+**not** captured by the internal estimate. Configuring Langfuse
+credentials (see `LANGFUSE_*` rows in the configuration table above)
+turns the gap between the two figures into an explicit "Comparação"
+subsection of the report, which is the only way to see the true
+rodada cost.
+
+The two sources are wired via `src/masops_evaluation/langfuse_client.py`,
+which talks to `GET /api/public/metrics/observations` with Basic Auth
+on the keys provided in `.env`.
+
 ---
 
 ## Repository layout
@@ -354,13 +387,15 @@ masops-evaluation/
 │       ├── schemas.py                # Pydantic models + ExecutionRecord
 │       ├── harness_client.py         # SWE-bench harness wrapper
 │       ├── masops_client.py          # HTTP client for MAS-Ops
+│       ├── langfuse_client.py        # Read-only HTTP client for Langfuse
 │       ├── mutations.py              # Deterministic synthetic patch mutations
 │       ├── select_instances.py       # CLI: select-instances
 │       ├── run_evaluation.py         # CLI: run-evaluation
 │       └── aggregate_results.py      # CLI: aggregate-results
 └── tests/
     ├── test_schemas.py               # Pydantic round-trip tests
-    └── test_mutations.py             # Mutation determinism + diff validity tests
+    ├── test_mutations.py             # Mutation determinism + diff validity tests
+    └── test_langfuse_client.py       # Mocked Langfuse client behavior
 ```
 
 ---
@@ -370,9 +405,12 @@ masops-evaluation/
 - **Sequential execution is mandatory.** MAS-Ops cannot safely handle
   concurrent `/eval/pr-review` requests, so the orchestrator processes one
   `(instance, repetition)` at a time. Plan rodada sizes accordingly.
-- **Partial cost coverage.** `tokens_by_agent` excludes Executor (Claude
-  Agent SDK) and Communicator (langchain). For end-to-end token accounting,
-  consult Langfuse traces on EC2-mas-ops.
+- **Partial cost coverage in the internal estimate.** `tokens_by_agent`
+  excludes Executor (Claude Agent SDK) and Communicator (langchain).
+  The aggregator closes this gap when `LANGFUSE_PUBLIC_KEY` /
+  `LANGFUSE_SECRET_KEY` are configured (see *Cost tracking — two
+  sources* above); without those, the report falls back to the partial
+  internal estimate.
 - **Patch sources beyond `gold` and `synthetic`.** Real failed-agent
   `trajectory` data is not wired up yet; see the "Patch sources" section
   for the motivation.

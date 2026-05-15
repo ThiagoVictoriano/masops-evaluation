@@ -21,14 +21,20 @@ import logging
 import statistics
 import sys
 from collections import Counter, defaultdict
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional
 
 import pandas as pd
 from rich.console import Console
 from rich.table import Table
 
 from masops_evaluation.config import configure_logging, get_settings
+from masops_evaluation.langfuse_client import (
+    UNKNOWN_MODEL,
+    build_langfuse_client,
+    normalize_model_id,
+)
 from masops_evaluation.schemas import ConfusionCell, ExecutionRecord
 
 logger = logging.getLogger(__name__)
@@ -113,6 +119,152 @@ def estimate_cost(
         "per_agent": per_agent,
         "assumed_input_share": assumed_input_share,
     }
+
+
+def _per_model_cost_from_pricing(
+    tokens_by_model: dict[str, int],
+    assumed_input_share: float = 0.5,
+) -> dict[str, Any]:
+    """Translate per-model token counts into a per-model USD breakdown.
+
+    Tokens for a model absent from :data:`MODEL_PRICING_USD_PER_MTOK`
+    (e.g. an unmapped Langfuse identifier) are kept in the row but
+    excluded from the USD total — the caller surfaces them as an
+    explicit caveat in the report.
+
+    Args:
+        tokens_by_model: ``{model_key: total_tokens}``. Keys should match
+            :data:`MODEL_PRICING_USD_PER_MTOK`; unknown keys are tolerated.
+        assumed_input_share: Fraction of tokens treated as input.
+
+    Returns:
+        Dict with ``per_model`` (model→{tokens,usd}), ``total_tokens``,
+        ``total_usd`` (sum over priced models), and ``unknown_tokens``.
+    """
+    per_model: dict[str, dict[str, Any]] = {}
+    total_tokens = 0
+    total_usd = 0.0
+    unknown_tokens = 0
+    for model, tokens in sorted(tokens_by_model.items()):
+        total_tokens += tokens
+        pricing = MODEL_PRICING_USD_PER_MTOK.get(model)
+        if pricing is None:
+            unknown_tokens += tokens
+            per_model[model] = {"tokens": tokens, "usd": None}
+            continue
+        in_price, out_price = pricing
+        avg_price = in_price * assumed_input_share + out_price * (1 - assumed_input_share)
+        usd = tokens * avg_price / 1_000_000
+        per_model[model] = {"tokens": tokens, "usd": usd}
+        total_usd += usd
+    return {
+        "per_model": per_model,
+        "total_tokens": total_tokens,
+        "total_usd": total_usd,
+        "unknown_tokens": unknown_tokens,
+        "assumed_input_share": assumed_input_share,
+    }
+
+
+def _internal_per_model_summary(
+    records: list[ExecutionRecord],
+    assumed_input_share: float = 0.5,
+) -> dict[str, Any]:
+    """Aggregate the in-process token counter to a per-model USD breakdown.
+
+    Sums :attr:`ExecutionRecord.tokens_by_agent` across records, maps each
+    agent to its expected model via :data:`EXPECTED_AGENT_MODELS`, then
+    collapses agents that share a model. The result is the "internal
+    estimate" half of the cost comparison — known to undercount because
+    Executor and Communicator bypass the instrumented call path.
+    """
+    tokens_by_model: Counter[str] = Counter()
+    for record in records:
+        for agent, value in record.tokens_by_agent.items():
+            model = EXPECTED_AGENT_MODELS.get(agent, UNKNOWN_MODEL)
+            tokens_by_model[model] += int(value)
+    return _per_model_cost_from_pricing(dict(tokens_by_model), assumed_input_share)
+
+
+def _langfuse_per_model_summary(
+    usage: list[dict[str, Any]],
+    assumed_input_share: float = 0.5,
+) -> dict[str, Any]:
+    """Collapse a Langfuse usage list into a per-model USD breakdown.
+
+    Langfuse identifiers carry dates and provider prefixes
+    (e.g. ``"anthropic/claude-4.6-sonnet-20251101"``); they are funnelled
+    through :func:`normalize_model_id` so several Langfuse rows can sum
+    into the same pricing-dict key.
+    """
+    tokens_by_canonical: Counter[str] = Counter()
+    raw_ids_by_canonical: dict[str, set[str]] = defaultdict(set)
+    for item in usage:
+        raw_model = str(item.get("model") or UNKNOWN_MODEL)
+        canonical = normalize_model_id(raw_model)
+        tokens_by_canonical[canonical] += int(item.get("total_tokens", 0))
+        raw_ids_by_canonical[canonical].add(raw_model)
+
+    summary = _per_model_cost_from_pricing(dict(tokens_by_canonical), assumed_input_share)
+    for canonical, body in summary["per_model"].items():
+        body["raw_ids"] = sorted(raw_ids_by_canonical.get(canonical, ()))
+    return summary
+
+
+def _rodada_time_window(
+    records: list[ExecutionRecord],
+) -> Optional[tuple[datetime, datetime]]:
+    """Return ``(min_start, max_end)`` parsed from record timestamps.
+
+    Records missing either timestamp contribute nothing; the window is
+    derived from whatever bounds are available. Returns ``None`` when no
+    record carries usable timestamps (e.g. an all-error rodada).
+    """
+    starts: list[datetime] = []
+    ends: list[datetime] = []
+    for r in records:
+        if r.timestamp_start:
+            try:
+                starts.append(datetime.fromisoformat(r.timestamp_start))
+            except ValueError:
+                logger.warning("Unparseable timestamp_start on %s: %r", r.execution_id, r.timestamp_start)
+        if r.timestamp_end:
+            try:
+                ends.append(datetime.fromisoformat(r.timestamp_end))
+            except ValueError:
+                logger.warning("Unparseable timestamp_end on %s: %r", r.execution_id, r.timestamp_end)
+    if not starts or not ends:
+        return None
+    return min(starts), max(ends)
+
+
+def _fetch_langfuse_actual(
+    records: list[ExecutionRecord],
+) -> Optional[dict[str, Any]]:
+    """Best-effort fetch of Langfuse usage for the rodada's time window.
+
+    Returns ``None`` when Langfuse is unconfigured, unreachable, the time
+    window is undefined, or the API returns an empty result — all of
+    which are surfaced as the same "Langfuse unavailable" branch in the
+    report. Per-row failures inside the client are already logged.
+    """
+    client = build_langfuse_client()
+    if client is None:
+        return None
+    window = _rodada_time_window(records)
+    if window is None:
+        logger.warning("Cannot derive rodada time window; skipping Langfuse query.")
+        return None
+    start, end = window
+    logger.info("Querying Langfuse for usage in [%s, %s]", start.isoformat(), end.isoformat())
+    usage = client.get_usage_in_window(start, end)
+    if not usage:
+        logger.warning("Langfuse returned no usage rows for the rodada window.")
+        return None
+    summary = _langfuse_per_model_summary(usage)
+    summary["window"] = {"start": start.isoformat(), "end": end.isoformat()}
+    summary["raw_models"] = sorted({str(item.get("model") or UNKNOWN_MODEL) for item in usage})
+    return summary
 
 
 def _infer_communicator_status(records: list[ExecutionRecord]) -> str:
@@ -638,6 +790,8 @@ def _render_report_md(
     error_summary: dict[str, Any] | None = None,
     incomplete_pairs: list[dict[str, Any]] | None = None,
     only_complete_pairs: bool = False,
+    internal_cost: dict[str, Any] | None = None,
+    langfuse_cost: dict[str, Any] | None = None,
 ) -> None:
     """Write the consolidated Markdown report to disk."""
     cls = metrics["classification"]
@@ -730,6 +884,101 @@ def _render_report_md(
             f"{details['tokens']} | {usd_str} |"
         )
     lines.append("")
+
+    # --- Cost: internal estimate vs Langfuse-measured -----------------
+    lines.append("### Custo Estimado (instrumentação interna)")
+    lines.append("")
+    lines.append(
+        "Baseado em `tokens_by_agent` dos `ExecutionRecord`s. "
+        "**NOTA**: subestima o custo real porque não captura o Executor "
+        "(Claude Agent SDK) nem o Communicator (`langchain.create_agent`)."
+    )
+    lines.append("")
+    if internal_cost and internal_cost["per_model"]:
+        lines.append("| Modelo | Tokens | USD estimado |")
+        lines.append("|---|---|---|")
+        for model, body in internal_cost["per_model"].items():
+            usd_str = f"${body['usd']:.2f}" if body["usd"] is not None else "n/a"
+            lines.append(f"| `{model}` | {body['tokens']} | {usd_str} |")
+        lines.append(
+            f"| **Total estimado** | **{internal_cost['total_tokens']}** | "
+            f"**${internal_cost['total_usd']:.2f}** |"
+        )
+        if internal_cost["unknown_tokens"]:
+            lines.append("")
+            lines.append(
+                f"_{internal_cost['unknown_tokens']} token(s) atribuídos a "
+                "modelos fora do PRICING ficam fora da soma de USD._"
+            )
+    else:
+        lines.append("_Sem tokens internos registrados nesta rodada._")
+    lines.append("")
+
+    lines.append("### Custo Real (medido via Langfuse)")
+    lines.append("")
+    if langfuse_cost is None:
+        lines.append(
+            "_Não foi possível coletar dados do Langfuse. Confira credenciais "
+            "em `.env` (`LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`) e a "
+            "acessibilidade de `LANGFUSE_URL` a partir da EC2-benchmark._"
+        )
+    else:
+        win = langfuse_cost.get("window", {})
+        lines.append(
+            "Captura todas as chamadas LLM da rodada, incluindo agentes que "
+            "usam Claude Agent SDK ou langchain direto."
+        )
+        if win:
+            lines.append(
+                f"Janela consultada: `{win.get('start')}` → `{win.get('end')}`."
+            )
+        lines.append("")
+        lines.append("| Modelo | Tokens | USD real |")
+        lines.append("|---|---|---|")
+        for model, body in langfuse_cost["per_model"].items():
+            usd_str = (
+                f"${body['usd']:.2f}" if body["usd"] is not None
+                else "n/a (modelo fora do PRICING)"
+            )
+            lines.append(f"| `{model}` | {body['tokens']} | {usd_str} |")
+        lines.append(
+            f"| **Total real** | **{langfuse_cost['total_tokens']}** | "
+            f"**${langfuse_cost['total_usd']:.2f}** |"
+        )
+        if langfuse_cost["unknown_tokens"]:
+            lines.append("")
+            lines.append(
+                f"_{langfuse_cost['unknown_tokens']} token(s) vieram de modelos "
+                "não mapeados em `MODEL_PRICING_USD_PER_MTOK` e estão excluídos "
+                "da soma de USD. Identificadores brutos do Langfuse: "
+                f"`{', '.join(langfuse_cost.get('raw_models', []))}`._"
+            )
+    lines.append("")
+
+    lines.append("### Comparação")
+    lines.append("")
+    if langfuse_cost is None or internal_cost is None:
+        lines.append("_Sem dados do Langfuse — comparação indisponível._")
+    else:
+        diff_usd = langfuse_cost["total_usd"] - internal_cost["total_usd"]
+        if langfuse_cost["total_usd"] > 0:
+            pct = (diff_usd / langfuse_cost["total_usd"]) * 100
+        else:
+            pct = 0.0
+        sign = "subestimação" if diff_usd >= 0 else "superestimação"
+        lines.append(
+            f"Diferença entre real e estimado: **${diff_usd:.2f}** "
+            f"(**{abs(pct):.1f}%** de {sign} no cálculo interno)."
+        )
+        lines.append("")
+        lines.append(
+            "Esta diferença reflete principalmente o consumo do agente "
+            "Executor via Claude Agent SDK (e do Communicator quando "
+            "habilitado), que não passam pela instrumentação "
+            "`llm.client.call_llm` interna do MAS-Ops."
+        )
+    lines.append("")
+
     if error_summary["total"]:
         lines.append("### Excluded error records")
         lines.append("")
@@ -979,6 +1228,11 @@ def aggregate(rodada_id: str, *, only_complete_pairs: bool = False) -> Path:
 
     metrics = compute_metrics(records)
 
+    # Cost summaries: the internal estimate (always available) and the
+    # Langfuse-measured actual (best-effort; None when unavailable).
+    internal_cost = _internal_per_model_summary(records)
+    langfuse_cost = _fetch_langfuse_actual(records)
+
     # CSV — exports every record (valid + errored) so the trail is complete.
     df = _records_to_dataframe(raw_records)
     # Ensure candidate_patch_source is present and visible early in column order.
@@ -1002,6 +1256,8 @@ def aggregate(rodada_id: str, *, only_complete_pairs: bool = False) -> Path:
         error_summary=error_summary,
         incomplete_pairs=incomplete_pairs,
         only_complete_pairs=only_complete_pairs,
+        internal_cost=internal_cost,
+        langfuse_cost=langfuse_cost,
     )
 
     # Pretty summary in terminal
