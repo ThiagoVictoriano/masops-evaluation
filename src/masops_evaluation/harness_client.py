@@ -76,13 +76,21 @@ def _write_predictions_file(
     predictions_path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
     return predictions_path
 
-
 def _parse_report(report_path: Path, instance_id: str) -> PatchLabel:
     """Parse the harness report and map it to a :data:`PatchLabel`.
 
-    The harness report typically contains a top-level mapping with
-    ``resolved_ids`` and ``unresolved_ids`` (among others). When the
-    instance is missing from either, we treat the run as an error.
+    The harness writes per-instance reports in the format:
+        {
+            "<instance_id>": {
+                "resolved": true|false,
+                "patch_successfully_applied": true|false,
+                ...
+            }
+        }
+
+    Aggregate runs use a different format with ``resolved_ids``,
+    ``unresolved_ids``, and ``error_ids``. We try the per-instance format
+    first, then fall back to the aggregate format.
     """
     if not report_path.exists():
         logger.warning("Harness report missing at %s", report_path)
@@ -93,24 +101,32 @@ def _parse_report(report_path: Path, instance_id: str) -> PatchLabel:
         logger.warning("Failed to parse harness report %s: %s", report_path, exc)
         return "error"
 
+    # Per-instance format (default for single-instance runs)
+    instance_data = data.get(instance_id)
+    if isinstance(instance_data, dict):
+        if not instance_data.get("patch_successfully_applied", True):
+            logger.warning("Patch failed to apply for %s", instance_id)
+            return "error"
+        return "resolved" if instance_data.get("resolved", False) else "not_resolved"
+
+    # Aggregate format fallback
     resolved_ids = set(data.get("resolved_ids", []) or [])
     unresolved_ids = set(data.get("unresolved_ids", []) or [])
     error_ids = set(data.get("error_ids", []) or [])
-
     if instance_id in resolved_ids:
         return "resolved"
     if instance_id in unresolved_ids:
         return "not_resolved"
     if instance_id in error_ids:
         return "error"
+
     logger.warning("Instance %s not present in harness report buckets", instance_id)
     return "error"
 
 
 def run_harness(
     instance_id: str,
-    patch_str: str,
-    run_id_suffix: str,
+    patch_str: str,    run_id_suffix: str,
     *,
     timeout_seconds: int = 1800,
     max_workers: int = 1,
