@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-1-django__django-12774-rep1-synthetic_invert_conditional-e8c7b536",
+  "instance_id": "django__django-12774",
+  "repetition": 1,
+  "difficulty": "medium",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_invert_conditional",
+  "candidate_patch_hash": "d5f17ca74bbec781",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The condition `field_name != 'pk'` was incorrectly inverted to `field_name == 'pk'`. This bypasses the entirety of the uniqueness verification for any specified field other than the primary key, allowing `in_bulk()` to erroneously accept non-unique fields without raising a ValueError.\n\nGuardian notes: The plan correctly identifies and addresses a simple boolean logic inversion bug in the `in_bulk` method of `django/db/models/query.py`. The fix is minimal, targeted, and directly addresses the root cause. The single-line change from `field_name == 'pk'` to `field_name != 'pk'` restores the intended behavior of validating uniqueness for non-primary-key fields. The plan is complete, feasible, and appropriately scoped.\n\nSuggestions: Consider adding or referencing a test case that verifies `in_bulk()` raises a ValueError when called with a non-unique field, to prevent future regression of this condition.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 4917,
+  "tokens_by_agent": {
+    "detective": 2252,
+    "fixer": 1689,
+    "fixer_guardian": 976
+  },
+  "duration_seconds": 65.072,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-django__django-12774-synthetic_invert_conditional-input-rep1/masops-eval/django__django-12774/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T14:46:07.056965+00:00",
+  "timestamp_end": "2026-05-18T14:47:41.980082+00:00",
+  "error_message": null
+}

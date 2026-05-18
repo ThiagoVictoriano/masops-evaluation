@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-1-django__django-13128-rep1-synthetic_remove_critical_line-26df5a5f",
+  "instance_id": "django__django-13128",
+  "repetition": 1,
+  "difficulty": "hard",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_remove_critical_line",
+  "candidate_patch_hash": "d1a5b724a1bcf759",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The PR removes the critical temporal subtraction and duration expression logic from `Combinable.as_sql`. Furthermore, it introduces an incomplete and invalid line `lhs = self.lhs.resolve_express` in `resolve_expression`, which will raise an `AttributeError` due to a typo (should be `resolve_expression()`) and completely break the resolution phase.\n\nGuardian notes: The plan correctly identifies two distinct issues: (1) a typo `resolve_express` that causes an AttributeError, and (2) missing temporal subtraction/duration logic that was removed from `as_sql` without being properly transplanted to `resolve_expression`. The fix targets a single file with a focused correction. The approach of restoring the logic in `resolve_expression` (rather than reverting to `as_sql`) is architecturally sound as resolution-time type checking is the correct phase for such substitutions. The plan is minimal, scoped appropriately, and clearly executable.\n\nSuggestions: The plan should explicitly clarify whether the fix will use `super().resolve_expression(...)` to resolve operands or call `self.lhs.resolve_expression(...)` and `self.rhs.resolve_expression(...)` directly \u2014 this distinction matters for correctness when handling nested expressions.; Consider noting that the returned `DurationExpression` or `TemporalSubtraction` nodes themselves need `resolve_expression` called on them (or be constructed with already-resolved operands) to avoid double-resolution issues.; The plan could mention verifying existing test coverage for `DurationExpression` and `TemporalSubtraction` paths to confirm no regressions after the refactor.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 6918,
+  "tokens_by_agent": {
+    "detective": 2448,
+    "fixer": 3202,
+    "fixer_guardian": 1268
+  },
+  "duration_seconds": 115.657,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-django__django-13128-synthetic_remove_critical_line-input-rep1/masops-eval/django__django-13128/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T15:08:33.228440+00:00",
+  "timestamp_end": "2026-05-18T15:10:58.612481+00:00",
+  "error_message": null
+}

@@ -1,0 +1,37 @@
+{
+  "execution_id": "rodada-1-django__django-10914-rep1-synthetic_remove_addition-735ce84c",
+  "instance_id": "django__django-10914",
+  "repetition": 1,
+  "difficulty": "easy",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_remove_addition",
+  "candidate_patch_hash": "97eecf4a5798d137",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The patch completely removes the `FILE_UPLOAD_PERMISSIONS` setting from `global_settings.py` instead of setting it to a default like 0o644. This will cause an AttributeError at runtime when Django's file storage tries to access `settings.FILE_UPLOAD_PERMISSIONS` if the user hasn't defined it in their own settings.\n\nGuardian notes: The plan correctly identifies the root cause (missing FILE_UPLOAD_PERMISSIONS in global_settings.py causing AttributeError) and proposes a minimal, targeted fix. The single-file modification restores the setting with a sensible default value of 0o644. The steps are clear, executable, and correctly ordered. The scope is minimal - only one setting in one file is touched. The risk is low as this is a straightforward addition of a default value to a settings file.\n\nSuggestions: Consider whether 0o644 is the correct default or if None might be more appropriate (preserving the original behavior where the OS default permissions are used). The original Django behavior before some versions used None to mean 'use OS default', so verify the intended semantic.; Check if any tests need to be updated to reflect the new default value, particularly tests that check FILE_UPLOAD_PERMISSIONS behavior.",
+  "alternative_patch": "diff --git a/django/conf/global_settings.py b/django/conf/global_settings.py\nindex acee9887d2..bdeec80610 100644\n--- a/django/conf/global_settings.py\n+++ b/django/conf/global_settings.py\n@@ -304,7 +304,7 @@ FILE_UPLOAD_TEMP_DIR = None\n \n # The numeric mode to set newly-uploaded files to. The value should be a mode\n # you'd pass directly to os.chmod; see https://docs.python.org/library/os.html#files-and-directories.\n-FILE_UPLOAD_PERMISSIONS = None\n+FILE_UPLOAD_PERMISSIONS = 0o644\n \n # The numeric mode to assign to newly-created directories, when uploading files.\n # The value should be a mode as you'd pass to os.chmod;\n",
+  "alternative_label": "resolved",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "executor_guardian",
+    "communicator"
+  ],
+  "total_tokens": 14952,
+  "tokens_by_agent": {
+    "detective": 2255,
+    "fixer": 2319,
+    "fixer_guardian": 1079,
+    "executor_guardian": 9299
+  },
+  "duration_seconds": 124.755,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-django__django-10914-synthetic_remove_addition-input-rep1/masops-eval/django__django-10914/report.json",
+  "harness_alternative_report_path": "logs/run_evaluation/eval-rodada-1-django__django-10914-synthetic_remove_addition-alt-rep1/masops-eval/django__django-10914/report.json",
+  "timestamp_start": "2026-05-18T14:08:00.666044+00:00",
+  "timestamp_end": "2026-05-18T14:11:01.449140+00:00",
+  "error_message": null
+}

@@ -1,0 +1,31 @@
+{
+  "execution_id": "rodada-1-sphinx-doc__sphinx-9658-rep1-gold-b0fe954b",
+  "instance_id": "sphinx-doc__sphinx-9658",
+  "repetition": 1,
+  "difficulty": "medium",
+  "repo": "sphinx-doc/sphinx",
+  "candidate_patch_source": "gold",
+  "candidate_patch_hash": "dcfa40badfe17d85",
+  "input_label": "resolved",
+  "mas_ops_decision": "approve",
+  "decided_by": "detective",
+  "justification": "Detective root_cause: No material issues found",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 0,
+  "agents_invoked": [
+    "detective_pr",
+    "communicator"
+  ],
+  "total_tokens": 2443,
+  "tokens_by_agent": {
+    "detective": 2443
+  },
+  "duration_seconds": 7.223,
+  "confusion_matrix_cell": "TP",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-sphinx-doc__sphinx-9658-gold-input-rep1/masops-eval/sphinx-doc__sphinx-9658/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T14:57:41.521256+00:00",
+  "timestamp_end": "2026-05-18T14:58:15.187642+00:00",
+  "error_message": null
+}

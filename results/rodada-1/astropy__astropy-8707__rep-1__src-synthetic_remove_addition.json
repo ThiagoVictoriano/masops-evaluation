@@ -1,0 +1,37 @@
+{
+  "execution_id": "rodada-1-astropy__astropy-8707-rep1-synthetic_remove_addition-41427478",
+  "instance_id": "astropy__astropy-8707",
+  "repetition": 1,
+  "difficulty": "medium",
+  "repo": "astropy/astropy",
+  "candidate_patch_source": "synthetic_remove_addition",
+  "candidate_patch_hash": "09fa56149726610e",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The PR updates the docstring for `Header.fromstring` to document support for `bytes` type data (decoded via latin-1), but the actual implementation code to decode `bytes` to a string is missing in `astropy/io/fits/header.py`. Only `Card.fromstring` received the implementation.\n\nGuardian notes: The plan correctly identifies the root cause: `Header.fromstring` has an updated docstring claiming `bytes` support but lacks the actual implementation. The fix mirrors the pattern already established in `Card.fromstring`. The proposed change is minimal, targeted, and low-risk \u2014 it only affects the `bytes` input path, leaving the existing string handling untouched. The decoding approach (latin-1) is consistent with the FITS standard and with what was done in `Card.fromstring`.\n\nSuggestions: Consider adding or verifying a unit test that passes a `bytes` object to `Header.fromstring` to confirm the decode path works end-to-end.; Ensure the placement of the `isinstance(data, bytes)` check is before any string operations (e.g., before `splitlines` or card parsing) to avoid subtle ordering bugs.",
+  "alternative_patch": "diff --git a/astropy/io/fits/header.py b/astropy/io/fits/header.py\nindex ad07e6d52d..5bc5cb1d24 100644\n--- a/astropy/io/fits/header.py\n+++ b/astropy/io/fits/header.py\n@@ -350,6 +350,11 @@ class Header:\n \n         cards = []\n \n+        # If the data is a bytes object, decode it using latin-1 (the FITS\n+        # standard character encoding) to convert it to a str before parsing.\n+        if isinstance(data, bytes):\n+            data = data.decode('latin1')\n+\n         # If the card separator contains characters that may validly appear in\n         # a card, the only way to unambiguously distinguish between cards is to\n         # require that they be Card.length long.  However, if the separator\n",
+  "alternative_label": "not_resolved",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "executor_guardian",
+    "communicator"
+  ],
+  "total_tokens": 27451,
+  "tokens_by_agent": {
+    "detective": 2507,
+    "fixer": 2134,
+    "fixer_guardian": 1098,
+    "executor_guardian": 21712
+  },
+  "duration_seconds": 102.594,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-astropy__astropy-8707-synthetic_remove_addition-input-rep1/masops-eval/astropy__astropy-8707/report.json",
+  "harness_alternative_report_path": "logs/run_evaluation/eval-rodada-1-astropy__astropy-8707-synthetic_remove_addition-alt-rep1/masops-eval/astropy__astropy-8707/report.json",
+  "timestamp_start": "2026-05-18T14:35:32.679952+00:00",
+  "timestamp_end": "2026-05-18T14:39:05.728385+00:00",
+  "error_message": null
+}

@@ -1,0 +1,31 @@
+{
+  "execution_id": "rodada-1-sympy__sympy-21847-rep1-synthetic_remove_critical_line-daf48ae5",
+  "instance_id": "sympy__sympy-21847",
+  "repetition": 1,
+  "difficulty": "easy",
+  "repo": "sympy/sympy",
+  "candidate_patch_source": "synthetic_remove_critical_line",
+  "candidate_patch_hash": "e3b095838733ebd9",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "approve",
+  "decided_by": "detective",
+  "justification": "(no justification produced)",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 0,
+  "agents_invoked": [
+    "detective_pr",
+    "communicator"
+  ],
+  "total_tokens": 3246,
+  "tokens_by_agent": {
+    "detective": 3246
+  },
+  "duration_seconds": 15.05,
+  "confusion_matrix_cell": "FP",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-sympy__sympy-21847-synthetic_remove_critical_line-input-rep1/masops-eval/sympy__sympy-21847/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T14:33:40.224436+00:00",
+  "timestamp_end": "2026-05-18T14:34:19.325738+00:00",
+  "error_message": null
+}

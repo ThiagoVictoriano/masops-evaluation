@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-1-sympy__sympy-14711-rep1-synthetic_invert_conditional-e156fae6",
+  "instance_id": "sympy__sympy-14711",
+  "repetition": 1,
+  "difficulty": "easy",
+  "repo": "sympy/sympy",
+  "candidate_patch_source": "synthetic_invert_conditional",
+  "candidate_patch_hash": "fc4f71b25170c9b5",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The condition `if other != 0: return self` completely breaks vector addition. It will return `self` for any non-zero operand instead of adding the vectors, and will still proceed to `_check_vector(0)` when `other` is 0, resulting in the original TypeError.\n\nGuardian notes: The plan correctly identifies the root cause (inverted condition `if other != 0` instead of `if other == 0`) and proposes a minimal, targeted fix. The change is isolated to a single operator in one method, addresses the exact bug described, and restores correct mathematical behavior for both the zero-operand case (used by Python's `sum()`) and normal vector addition. The risk assessment is accurate.\n\nSuggestions: Consider adding a unit test that exercises `sum([v1, v2, v3])` with Vector objects to prevent regression, since this is the primary use case that was broken.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 4507,
+  "tokens_by_agent": {
+    "detective": 1758,
+    "fixer": 1722,
+    "fixer_guardian": 1027
+  },
+  "duration_seconds": 99.297,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-sympy__sympy-14711-synthetic_invert_conditional-input-rep1/masops-eval/sympy__sympy-14711/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T14:29:50.328589+00:00",
+  "timestamp_end": "2026-05-18T14:31:53.843122+00:00",
+  "error_message": null
+}

@@ -1,0 +1,37 @@
+{
+  "execution_id": "rodada-1-django__django-12193-rep1-synthetic_invert_conditional-ba8df5f9",
+  "instance_id": "django__django-12193",
+  "repetition": 1,
+  "difficulty": "easy",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_invert_conditional",
+  "candidate_patch_hash": "ab1ff44fbc49325e",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The PR introduces a logical error and runtime crash by using `attrs and {}` instead of `attrs or {}`. If `attrs` is a populated dictionary, `attrs and {}` evaluates to `{}`, which silently drops all existing attributes. If `attrs` is `None`, `attrs and {}` evaluates to `None`, which causes a `TypeError: 'NoneType' object is not a mapping` when unpacked with the `**` operator.\n\nGuardian notes: The plan correctly identifies the root cause (logical error using `and` instead of `or` in dictionary unpacking) and proposes a minimal, targeted fix. The single-line change in `django/forms/widgets.py` directly addresses both failure modes: the TypeError when attrs is None, and the silent dropping of attributes when attrs is a populated dictionary. The fix is well-scoped, low-risk, and the steps are clear and executable.\n\nSuggestions: Consider adding a note about verifying existing tests for the `get_context` method pass after the fix, and potentially adding a regression test case that passes a non-empty attrs dict to confirm attributes are preserved.",
+  "alternative_patch": "diff --git a/django/forms/widgets.py b/django/forms/widgets.py\nindex 6fe220bea7..d83d63c169 100644\n--- a/django/forms/widgets.py\n+++ b/django/forms/widgets.py\n@@ -522,9 +522,7 @@ class CheckboxInput(Input):\n \n     def get_context(self, name, value, attrs):\n         if self.check_test(value):\n-            if attrs is None:\n-                attrs = {}\n-            attrs['checked'] = True\n+            attrs = {**(attrs or {}), 'checked': True}\n         return super().get_context(name, value, attrs)\n \n     def value_from_datadict(self, data, files, name):\n",
+  "alternative_label": "resolved",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "executor_guardian",
+    "communicator"
+  ],
+  "total_tokens": 18225,
+  "tokens_by_agent": {
+    "detective": 2603,
+    "fixer": 2044,
+    "fixer_guardian": 1047,
+    "executor_guardian": 12531
+  },
+  "duration_seconds": 129.705,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-django__django-12193-synthetic_invert_conditional-input-rep1/masops-eval/django__django-12193/report.json",
+  "harness_alternative_report_path": "logs/run_evaluation/eval-rodada-1-django__django-12193-synthetic_invert_conditional-alt-rep1/masops-eval/django__django-12193/report.json",
+  "timestamp_start": "2026-05-18T14:11:42.205746+00:00",
+  "timestamp_end": "2026-05-18T14:14:48.600343+00:00",
+  "error_message": null
+}

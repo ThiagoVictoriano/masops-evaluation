@@ -1,0 +1,31 @@
+{
+  "execution_id": "rodada-1-django__django-15525-rep1-synthetic_expand_scope-cfbe4937",
+  "instance_id": "django__django-15525",
+  "repetition": 1,
+  "difficulty": "medium",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_expand_scope",
+  "candidate_patch_hash": "4c08713135693ee0",
+  "input_label": "resolved",
+  "mas_ops_decision": "approve",
+  "decided_by": "detective",
+  "justification": "Detective root_cause: No material issues found",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 0,
+  "agents_invoked": [
+    "detective_pr",
+    "communicator"
+  ],
+  "total_tokens": 3639,
+  "tokens_by_agent": {
+    "detective": 3639
+  },
+  "duration_seconds": 14.566,
+  "confusion_matrix_cell": "TP",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-django__django-15525-synthetic_expand_scope-input-rep1/masops-eval/django__django-15525/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T14:48:31.723450+00:00",
+  "timestamp_end": "2026-05-18T14:49:14.509875+00:00",
+  "error_message": null
+}

@@ -1,0 +1,31 @@
+{
+  "execution_id": "rodada-1-astropy__astropy-8707-rep1-gold-f64b59bf",
+  "instance_id": "astropy__astropy-8707",
+  "repetition": 1,
+  "difficulty": "medium",
+  "repo": "astropy/astropy",
+  "candidate_patch_source": "gold",
+  "candidate_patch_hash": "f993c1ada6f19bcd",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "approve",
+  "decided_by": "detective",
+  "justification": "Detective root_cause: No material issues found",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 0,
+  "agents_invoked": [
+    "detective_pr",
+    "communicator"
+  ],
+  "total_tokens": 3466,
+  "tokens_by_agent": {
+    "detective": 3466
+  },
+  "duration_seconds": 18.195,
+  "confusion_matrix_cell": "FP",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-astropy__astropy-8707-gold-input-rep1/masops-eval/astropy__astropy-8707/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T14:34:19.326110+00:00",
+  "timestamp_end": "2026-05-18T14:35:32.679376+00:00",
+  "error_message": null
+}

@@ -51,8 +51,6 @@ coverage.xml
 logs/
 
 # Evaluation outputs
-results/
-consolidated/
 .swebench_cache/
 
 # Local datasets
@@ -72,3 +70,17 @@ data/raw_swe_bench/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Predictions temporários do harness
+tmp/
+*.predictions.jsonl
+
+# Predictions JSONs soltos na raiz (legado do harness antigo)
+/gold.*.json
+/masops-eval.*.json
+
+# Smoke tests e validações (não são rodadas oficiais)
+results/smoke-*/
+results/cache-*/
+consolidated/smoke-*/
+consolidated/cache-*/

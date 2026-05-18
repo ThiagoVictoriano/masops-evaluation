@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-1-django__django-13212-rep1-synthetic_remove_addition-dc427284",
+  "instance_id": "django__django-13212",
+  "repetition": 1,
+  "difficulty": "hard",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_remove_addition",
+  "candidate_patch_hash": "57d808dbe5d2bb93",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The patch removes the `raise ValidationError(...)` statement inside `URLValidator.__call__` under the `if scheme not in self.schemes:` condition in `django/core/validators.py` but does not replace it. This leaves the `if` block empty, which will cause an `IndentationError` / `SyntaxError` in Python. Additionally, the patch completely removes the `validate` method in `django/forms/fields.py`, which incorrectly drops the `is_finite()` validation.\n\nGuardian notes: The plan correctly identifies two distinct issues: (1) a missing `raise ValidationError(...)` statement in `URLValidator.__call__` that would cause a SyntaxError/IndentationError due to an empty `if` block, and (2) an accidentally deleted `validate` method in `django/forms/fields.py` that drops `is_finite()` validation. Both steps are concrete, targeted, and address the root causes identified by the Detective. The fix is minimal \u2014 it only touches the two files where the bugs were introduced, and the changes are restorative in nature (bringing back removed code), which minimizes regression risk.\n\nSuggestions: When restoring the `validate` method in `django/forms/fields.py`, confirm the exact class it belongs to (likely `DecimalField` or `FloatField`) and ensure the method signature and logic match the original precisely, including any `empty_values` guard condition.; Add a regression test or reference existing tests that cover both the scheme validation path in `URLValidator` and the `is_finite()` path in the form field to confirm the fixes are verified.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 7392,
+  "tokens_by_agent": {
+    "detective": 3077,
+    "fixer": 3040,
+    "fixer_guardian": 1275
+  },
+  "duration_seconds": 89.163,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-django__django-13212-synthetic_remove_addition-input-rep1/masops-eval/django__django-13212/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T15:11:54.575558+00:00",
+  "timestamp_end": "2026-05-18T15:13:53.613099+00:00",
+  "error_message": null
+}

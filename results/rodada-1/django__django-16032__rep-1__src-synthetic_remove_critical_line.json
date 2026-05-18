@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-1-django__django-16032-rep1-synthetic_remove_critical_line-229f662e",
+  "instance_id": "django__django-16032",
+  "repetition": 1,
+  "difficulty": "medium",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_remove_critical_line",
+  "candidate_patch_hash": "2375e69dff3c2945",
+  "input_label": "resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The PR synthetically removes `self.rhs.clear_select_clause()` and `self.rhs.add_fields([target_field], True)` in `django/db/models/fields/related_lookups.py`. Without these lines, subqueries used in related lookups (like `__in`) will select all fields rather than correctly clearing the selection and selecting only the single target field. This causes a SQL OperationalError (e.g., 'sub-select returns X columns - expected 1') because the subquery returns too many columns.\n\nGuardian notes: The plan correctly identifies the root cause (accidental removal of two method calls) and proposes a minimal, targeted fix by restoring exactly those two lines in the correct location within `get_prep_lookup`. The scope is minimal (single file, single method), the steps are clear and executable, and the risk is low since this is a revert of an incorrect deletion back to known-good behavior. No regressions are expected as the restored logic was previously stable.\n\nSuggestions: Consider adding or referencing a regression test that verifies subqueries in related lookups (e.g., __in with a QuerySet) return only the target field, to prevent this from being accidentally removed again in the future.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 7094,
+  "tokens_by_agent": {
+    "detective": 2978,
+    "fixer": 2957,
+    "fixer_guardian": 1159
+  },
+  "duration_seconds": 81.662,
+  "confusion_matrix_cell": "FN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-django__django-16032-synthetic_remove_critical_line-input-rep1/masops-eval/django__django-16032/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T14:50:01.396620+00:00",
+  "timestamp_end": "2026-05-18T14:51:50.705132+00:00",
+  "error_message": null
+}

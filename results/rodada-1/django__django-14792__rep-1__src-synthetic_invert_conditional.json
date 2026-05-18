@@ -1,0 +1,31 @@
+{
+  "execution_id": "rodada-1-django__django-14792-rep1-synthetic_invert_conditional-679d7d2a",
+  "instance_id": "django__django-14792",
+  "repetition": 1,
+  "difficulty": "easy",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_invert_conditional",
+  "candidate_patch_hash": "63c549265202836e",
+  "input_label": "resolved",
+  "mas_ops_decision": "approve",
+  "decided_by": "detective",
+  "justification": "(no justification produced)",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 0,
+  "agents_invoked": [
+    "detective_pr",
+    "communicator"
+  ],
+  "total_tokens": 3286,
+  "tokens_by_agent": {
+    "detective": 3286
+  },
+  "duration_seconds": 20.638,
+  "confusion_matrix_cell": "TP",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-django__django-14792-synthetic_invert_conditional-input-rep1/masops-eval/django__django-14792/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T14:21:26.800456+00:00",
+  "timestamp_end": "2026-05-18T14:22:13.688004+00:00",
+  "error_message": null
+}

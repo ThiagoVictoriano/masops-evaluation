@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-1-django__django-13109-rep1-synthetic_remove_critical_line-1bba269d",
+  "instance_id": "django__django-13109",
+  "repetition": 1,
+  "difficulty": "easy",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_remove_critical_line",
+  "candidate_patch_hash": "e0991a697527b4a7",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The patch maliciously or mistakenly removes the start of the `qs` assignment and `filter(` function call, leaving a dangling kwarg `**{...}` and a closing parenthesis. This introduces a SyntaxError and also causes a NameError because `qs` will not be defined on the subsequent line.\n\nGuardian notes: The plan correctly identifies the root cause (a missing line that defines `qs` and begins the `.filter(` call), proposes a single targeted fix to restore that line, and explains why it resolves both the SyntaxError and the NameError. The scope is minimal \u2014 only one line in one file is touched. The risk is low since it is a pure revert of a broken removal.\n\nSuggestions: Consider adding a brief unit test or referencing an existing test that exercises the `validate` method to confirm the fix is correct after applying it.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 4626,
+  "tokens_by_agent": {
+    "detective": 1983,
+    "fixer": 1646,
+    "fixer_guardian": 997
+  },
+  "duration_seconds": 71.943,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-django__django-13109-synthetic_remove_critical_line-input-rep1/masops-eval/django__django-13109/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T14:17:06.727907+00:00",
+  "timestamp_end": "2026-05-18T14:18:46.488856+00:00",
+  "error_message": null
+}

@@ -1,0 +1,31 @@
+{
+  "execution_id": "rodada-1-sphinx-doc__sphinx-9658-rep1-synthetic_remove_critical_line-0529e6c0",
+  "instance_id": "sphinx-doc__sphinx-9658",
+  "repetition": 1,
+  "difficulty": "medium",
+  "repo": "sphinx-doc/sphinx",
+  "candidate_patch_source": "synthetic_remove_critical_line",
+  "candidate_patch_hash": "b4737dc2c971fefb",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "approve",
+  "decided_by": "detective",
+  "justification": "(no justification produced)",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 0,
+  "agents_invoked": [
+    "detective_pr",
+    "communicator"
+  ],
+  "total_tokens": 3908,
+  "tokens_by_agent": {
+    "detective": 3908
+  },
+  "duration_seconds": 16.123,
+  "confusion_matrix_cell": "FP",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-sphinx-doc__sphinx-9658-synthetic_remove_critical_line-input-rep1/masops-eval/sphinx-doc__sphinx-9658/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T14:58:15.188130+00:00",
+  "timestamp_end": "2026-05-18T14:58:55.937194+00:00",
+  "error_message": null
+}

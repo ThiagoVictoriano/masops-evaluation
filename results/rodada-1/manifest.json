@@ -1,0 +1,85 @@
+{
+  "rodada_id": "rodada-1",
+  "started_at": "2026-05-18T14:07:27.438843+00:00",
+  "ended_at": "2026-05-18T15:19:53.215701+00:00",
+  "config": {
+    "repetitions": 1,
+    "patches_per_case": 2,
+    "patch_sources": [
+      "gold",
+      "synthetic"
+    ],
+    "case_schedule": [
+      "gold",
+      "synthetic"
+    ],
+    "max_cases": 30,
+    "resume": false,
+    "instance_ids_override": null,
+    "selection_path": "data/selected_instances.json",
+    "dataset": "princeton-nlp/SWE-bench_Verified",
+    "masops_endpoint": "http://172.31.30.4:8000/eval/pr-review"
+  },
+  "planned_instances": [
+    "django__django-10914",
+    "django__django-12193",
+    "django__django-12276",
+    "django__django-13109",
+    "django__django-14580",
+    "django__django-14792",
+    "django__django-15368",
+    "scikit-learn__scikit-learn-13439",
+    "sphinx-doc__sphinx-9281",
+    "sympy__sympy-14711",
+    "sympy__sympy-20916",
+    "sympy__sympy-21847",
+    "astropy__astropy-8707",
+    "django__django-10973",
+    "django__django-11087",
+    "django__django-12663",
+    "django__django-12774",
+    "django__django-15525",
+    "django__django-16032",
+    "django__django-16082",
+    "django__django-16502",
+    "sphinx-doc__sphinx-8638",
+    "sphinx-doc__sphinx-9658",
+    "sympy__sympy-24213",
+    "astropy__astropy-13398",
+    "django__django-11885",
+    "django__django-13128",
+    "django__django-13212",
+    "django__django-13837",
+    "django__django-15128"
+  ],
+  "reserve_instances": [
+    "django__django-15957",
+    "pylint-dev__pylint-4551",
+    "pylint-dev__pylint-8898",
+    "sphinx-doc__sphinx-9461",
+    "sympy__sympy-12489",
+    "sympy__sympy-16597"
+  ],
+  "planned_distribution": {
+    "gold": 1,
+    "synthetic": 1
+  },
+  "effective_distribution": {
+    "gold": 30,
+    "synthetic_remove_addition": 8,
+    "synthetic_invert_conditional": 7,
+    "synthetic_expand_scope": 8,
+    "synthetic_remove_critical_line": 7
+  },
+  "synthetic_unavailable": [],
+  "aborted": false,
+  "abort_reason": null,
+  "counts": {
+    "TP": 39,
+    "TN": 14,
+    "FP": 5,
+    "FN": 1,
+    "ERROR": 1,
+    "SKIPPED": 0
+  }
+}

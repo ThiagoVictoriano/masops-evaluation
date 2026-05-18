@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-1-django__django-16082-rep1-synthetic_remove_addition-39dae3f4",
+  "instance_id": "django__django-16082",
+  "repetition": 1,
+  "difficulty": "medium",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_remove_addition",
+  "candidate_patch_hash": "4e6b73f608f36952",
+  "input_label": "error",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The PR misses adding `Combinable.MOD` to the tuple of mathematical operators (alongside `Combinable.SUB`, `Combinable.MUL`, and `Combinable.DIV`) used for numeric type resolution. As a result, when MOD is applied with mixed field types like Decimal and Integer, it will fail to resolve the result to a Decimal type, leaving the core issue unresolved.\n\nGuardian notes: The plan is complete, minimal, and directly addresses the root cause. The fix is localized to a single file and a single tuple modification, adding `Combinable.MOD` alongside the existing mathematical operators (`SUB`, `MUL`, `DIV`) for numeric type resolution. The approach is consistent with the existing pattern in the codebase, and the risk of regression is very low since it only extends existing behavior to cover the MOD operator.\n\nSuggestions: Consider verifying that a test case covering MOD with mixed Decimal/Integer types is added or already exists to prevent future regressions.; Confirm that `Combinable.MOD` is already defined in the same file or properly imported before the tuple is referenced, to avoid any NameError.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 4440,
+  "tokens_by_agent": {
+    "detective": 1986,
+    "fixer": 1381,
+    "fixer_guardian": 1073
+  },
+  "duration_seconds": 69.393,
+  "confusion_matrix_cell": null,
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-1-django__django-16082-synthetic_remove_addition-input-rep1/<unknown>/django__django-16082/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T14:52:28.595027+00:00",
+  "timestamp_end": "2026-05-18T14:53:58.401769+00:00",
+  "error_message": null
+}
