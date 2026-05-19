@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-2-django__django-16032-rep1-synthetic_remove_critical_line-e15ddf1c",
+  "instance_id": "django__django-16032",
+  "repetition": 1,
+  "difficulty": "medium",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_remove_critical_line",
+  "candidate_patch_hash": "2375e69dff3c2945",
+  "input_label": "resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The PR incorrectly removes critical logic (`self.rhs.clear_select_clause()` and `self.rhs.add_fields([target_field], True)`) from `related_lookups.py`. This prevents the QuerySet from properly generating purely single-column subqueries for the right-hand side of IN lookups, resulting in an OperationalError (sub-select returns multiple columns) because the subquery's fields are not cleared and restricted to the target field.\n\nGuardian notes: The plan correctly identifies the root cause as the accidental removal of two critical lines (`self.rhs.clear_select_clause()` and `self.rhs.add_fields([target_field], True)`) from `related_lookups.py`. The fix is a minimal, targeted restoration of previously working logic. The approach is sound: restoring these two calls ensures the RHS subquery only selects a single column (the target field), which is required for SQL IN subquery semantics. The plan is clear, executable, scoped to a single file, and carries low regression risk since it reverts to previously tested behavior.\n\nSuggestions: Consider verifying the exact placement order: `clear_select_clause()` should be called before `target_field` is determined if `target_field` depends on any query state, or after if it's purely derived from model metadata \u2014 the plan should clarify the precise insertion point relative to the `target_field` assignment.; It would be beneficial to reference or run existing test cases (e.g., tests involving related field IN lookups with subqueries) to confirm the restoration fully addresses the regression.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 6296,
+  "tokens_by_agent": {
+    "detective": 2622,
+    "fixer": 2475,
+    "fixer_guardian": 1199
+  },
+  "duration_seconds": 80.543,
+  "confusion_matrix_cell": "FN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-django__django-16032-synthetic_remove_critical_line-input-rep1/masops-eval/django__django-16032/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T23:13:29.835685+00:00",
+  "timestamp_end": "2026-05-18T23:15:19.466487+00:00",
+  "error_message": null
+}

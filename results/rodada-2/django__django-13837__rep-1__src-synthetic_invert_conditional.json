@@ -1,0 +1,37 @@
+{
+  "execution_id": "rodada-2-django__django-13837-rep1-synthetic_invert_conditional-ae3159c3",
+  "instance_id": "django__django-13837",
+  "repetition": 1,
+  "difficulty": "hard",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_invert_conditional",
+  "candidate_patch_hash": "1c6737bb943ee1f1",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The condition `__main__.__spec__ is not None or __main__.__spec__.parent` uses `or` instead of `and`. When a script is run directly (without `-m`), `__main__.__spec__` is `None`. The first condition (`is not None`) evaluates to `False`, causing the second condition `__main__.__spec__.parent` to evaluate, which raises an `AttributeError: 'NoneType' object has no attribute 'parent'`.\n\nGuardian notes: The plan correctly identifies the root cause (short-circuit evaluation failure due to `or` instead of `and`) and proposes a minimal, targeted fix. The change from `or` to `and` in the condition `__main__.__spec__ is not None and __main__.__spec__.parent` properly short-circuits evaluation when `__main__.__spec__` is `None`, preventing the `AttributeError`. The fix is confined to a single line in one file, is logically sound, and carries very low regression risk.\n\nSuggestions: Consider adding a test case covering the scenario where a script is run directly (without `-m`) to prevent regression of this specific bug in the future.",
+  "alternative_patch": "diff --git a/django/utils/autoreload.py b/django/utils/autoreload.py\nindex b8efb9f881..77f6d16819 100644\n--- a/django/utils/autoreload.py\n+++ b/django/utils/autoreload.py\n@@ -216,14 +216,13 @@ def get_child_arguments():\n     executable is reported to not have the .exe extension which can cause bugs\n     on reloading.\n     \"\"\"\n-    import django.__main__\n-    django_main_path = Path(django.__main__.__file__)\n+    import __main__\n     py_script = Path(sys.argv[0])\n \n     args = [sys.executable] + ['-W%s' % o for o in sys.warnoptions]\n-    if py_script == django_main_path:\n-        # The server was started with `python -m django runserver`.\n-        args += ['-m', 'django']\n+    if __main__.__spec__ is not None and __main__.__spec__.parent:\n+        # The server was started with `python -m pkg`.\n+        args += ['-m', __main__.__spec__.parent]\n         args += sys.argv[1:]\n     elif not py_script.exists():\n         # sys.argv[0] may not exist for several reasons on Windows.\n",
+  "alternative_label": "resolved",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "executor_guardian",
+    "communicator"
+  ],
+  "total_tokens": 15147,
+  "tokens_by_agent": {
+    "detective": 2666,
+    "fixer": 1999,
+    "fixer_guardian": 1076,
+    "executor_guardian": 9406
+  },
+  "duration_seconds": 138.777,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-django__django-13837-synthetic_invert_conditional-input-rep1/masops-eval/django__django-13837/report.json",
+  "harness_alternative_report_path": "logs/run_evaluation/eval-rodada-2-django__django-13837-synthetic_invert_conditional-alt-rep1/masops-eval/django__django-13837/report.json",
+  "timestamp_start": "2026-05-18T23:40:20.385866+00:00",
+  "timestamp_end": "2026-05-18T23:43:44.055554+00:00",
+  "error_message": null
+}

@@ -1,0 +1,31 @@
+{
+  "execution_id": "rodada-2-django__django-12193-rep1-gold-2aa32bdf",
+  "instance_id": "django__django-12193",
+  "repetition": 1,
+  "difficulty": "easy",
+  "repo": "django/django",
+  "candidate_patch_source": "gold",
+  "candidate_patch_hash": "5cca9d8a9087d9d3",
+  "input_label": "resolved",
+  "mas_ops_decision": "approve",
+  "decided_by": "detective",
+  "justification": "Detective root_cause: No material issues found",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 0,
+  "agents_invoked": [
+    "detective_pr",
+    "communicator"
+  ],
+  "total_tokens": 1827,
+  "tokens_by_agent": {
+    "detective": 1827
+  },
+  "duration_seconds": 7.837,
+  "confusion_matrix_cell": "TP",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-django__django-12193-gold-input-rep1/masops-eval/django__django-12193/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T22:25:18.955690+00:00",
+  "timestamp_end": "2026-05-18T22:25:57.824517+00:00",
+  "error_message": null
+}

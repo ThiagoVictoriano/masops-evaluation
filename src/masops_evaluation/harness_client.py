@@ -175,6 +175,8 @@ def run_harness(
             run_id,
             "--instance_ids",
             instance_id,
+            "--cache_level",
+            "instance",
         ]
 
         try:

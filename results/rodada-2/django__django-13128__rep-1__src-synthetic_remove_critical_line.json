@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-2-django__django-13128-rep1-synthetic_remove_critical_line-06a15940",
+  "instance_id": "django__django-13128",
+  "repetition": 1,
+  "difficulty": "hard",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_remove_critical_line",
+  "candidate_patch_hash": "d1a5b724a1bcf759",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "approve",
+  "decided_by": "detective",
+  "justification": "Detective root_cause: Critical temporal subtraction and duration field conversion logic has been removed from CombinedExpression.as_sql without proper replacement. Additionally, the added line in resolve_expression (`lhs = self.lhs.resolve_express`) is incomplete and missing the method call and arguments, which will cause runtime errors.\n\nGuardian notes: The fix plan is empty \u2014 it contains no concrete steps whatsoever. It only states a risk level of 'unknown' with no description of what changes need to be made, which files to modify, or how to restore the missing temporal subtraction/duration field conversion logic in CombinedExpression.as_sql or fix the incomplete resolve_expression line. This does not qualify as a valid plan with executable steps, nor does it conclude that no change is needed with justification.\n\nBlocking issues: The plan contains no concrete steps or actions. It is effectively empty and provides no guidance on how to fix the identified root cause (missing temporal subtraction logic in CombinedExpression.as_sql and incomplete resolve_expression assignment).\n\nSuggestions: The plan should specify restoring the temporal subtraction and duration field conversion logic in CombinedExpression.as_sql that was removed.; The plan should specify fixing the incomplete line `lhs = self.lhs.resolve_express` in resolve_expression to include the proper method name and arguments (likely `resolve_expression(query, allow_joins, reuse, summarize, for_save)`).; The plan should identify the exact lines/blocks to restore in django/db/models/expressions.py.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 3,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 15571,
+  "tokens_by_agent": {
+    "detective": 2631,
+    "fixer": 10169,
+    "fixer_guardian": 2771
+  },
+  "duration_seconds": 92.467,
+  "confusion_matrix_cell": "FP",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-django__django-13128-synthetic_remove_critical_line-input-rep1/masops-eval/django__django-13128/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T23:34:04.071116+00:00",
+  "timestamp_end": "2026-05-18T23:36:06.374464+00:00",
+  "error_message": null
+}

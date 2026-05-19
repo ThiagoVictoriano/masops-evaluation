@@ -1,0 +1,37 @@
+{
+  "execution_id": "rodada-2-django__django-15368-rep1-synthetic_expand_scope-94a565c0",
+  "instance_id": "django__django-15368",
+  "repetition": 1,
+  "difficulty": "easy",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_expand_scope",
+  "candidate_patch_hash": "89fcf6d019c69646",
+  "input_label": "resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The PR removes `Expression` from the `django.db.models.expressions` import. `Expression` is relied upon elsewhere in `django/db/models/query.py` (e.g., in other QuerySet methods like `update` or `annotate` for type checking), and removing it will cause a `NameError`.\n\nGuardian notes: The plan correctly identifies the root cause (missing `Expression` import in `django/db/models/query.py`) and proposes a minimal, targeted fix: restoring the import. The steps are clear and executable, the scope is minimal (single file, single change), and the risk is low since it's restoring a previously-present import that is actively used elsewhere in the file.\n\nSuggestions: Consider verifying all usages of `Expression` in `query.py` to ensure no other imports or references were inadvertently removed alongside it.",
+  "alternative_patch": "diff --git a/django/db/models/query.py b/django/db/models/query.py\nindex f8d848e926..3c234d8241 100644\n--- a/django/db/models/query.py\n+++ b/django/db/models/query.py\n@@ -670,7 +670,7 @@ class QuerySet:\n                 when_statements = []\n                 for obj in batch_objs:\n                     attr = getattr(obj, field.attname)\n-                    if not isinstance(attr, Expression):\n+                    if not isinstance(attr, (Expression, F)):\n                         attr = Value(attr, output_field=field)\n                     when_statements.append(When(pk=obj.pk, then=attr))\n                 case_statement = Case(*when_statements, output_field=field)\n",
+  "alternative_label": "resolved",
+  "guardian_iterations": 2,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "executor_guardian",
+    "communicator"
+  ],
+  "total_tokens": 59186,
+  "tokens_by_agent": {
+    "detective": 3323,
+    "fixer": 1742,
+    "fixer_guardian": 908,
+    "executor_guardian": 53213
+  },
+  "duration_seconds": 252.115,
+  "confusion_matrix_cell": "FN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-django__django-15368-synthetic_expand_scope-input-rep1/masops-eval/django__django-15368/report.json",
+  "harness_alternative_report_path": "logs/run_evaluation/eval-rodada-2-django__django-15368-synthetic_expand_scope-alt-rep1/masops-eval/django__django-15368/report.json",
+  "timestamp_start": "2026-05-18T22:38:25.836106+00:00",
+  "timestamp_end": "2026-05-18T22:43:38.537828+00:00",
+  "error_message": null
+}

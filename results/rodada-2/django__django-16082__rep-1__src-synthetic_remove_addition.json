@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-2-django__django-16082-rep1-synthetic_remove_addition-57a95d53",
+  "instance_id": "django__django-16082",
+  "repetition": 1,
+  "difficulty": "medium",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_remove_addition",
+  "candidate_patch_hash": "4e6b73f608f36952",
+  "input_label": "error",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The PR fails to fix the bug described in the PR description because it does not actually add `Combinable.MOD` to the mathematical operators explicitly defined for mixed type operations (e.g. `DecimalField` and `IntegerField`). The diff is empty and effectively a no-op.\n\nGuardian notes: The plan correctly identifies the root cause (missing Combinable.MOD in the mathematical operators tuple for mixed type operations) and proposes a minimal, targeted fix. The single file modification is clear and executable. The risk is low as it only extends an existing tuple with a missing operator rather than changing any logic. The approach is consistent with how the other arithmetic operators (ADD, SUB, MUL, DIV) are handled.\n\nSuggestions: Consider verifying that any test coverage for mixed-type modulo operations (e.g., DecimalField % IntegerField) is added or updated to prevent future regressions.; Check if there are similar operator tuples elsewhere in the codebase (e.g., in database backend files) that might also need MOD added for consistency.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 4806,
+  "tokens_by_agent": {
+    "detective": 2341,
+    "fixer": 1435,
+    "fixer_guardian": 1030
+  },
+  "duration_seconds": 80.887,
+  "confusion_matrix_cell": null,
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-django__django-16082-synthetic_remove_addition-input-rep1/<unknown>/django__django-16082/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T23:15:55.928859+00:00",
+  "timestamp_end": "2026-05-18T23:17:38.731185+00:00",
+  "error_message": null
+}

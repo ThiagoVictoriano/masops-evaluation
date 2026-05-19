@@ -1,0 +1,37 @@
+{
+  "execution_id": "rodada-2-scikit-learn__scikit-learn-13439-rep1-synthetic_remove_critical_line-ba45c163",
+  "instance_id": "scikit-learn__scikit-learn-13439",
+  "repetition": 1,
+  "difficulty": "easy",
+  "repo": "scikit-learn/scikit-learn",
+  "candidate_patch_source": "synthetic_remove_critical_line",
+  "candidate_patch_hash": "c07b0f9c7ef8b753",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The `__len__` method introduced in `sklearn/pipeline.py` is missing its return statement. It contains only a docstring and implicitly returns `None`, which will raise a TypeError when `len()` is called on a Pipeline object.\n\nGuardian notes: The plan correctly identifies the root cause (missing return statement in `__len__`) and proposes a minimal, targeted fix. The single change \u2014 adding `return len(self.steps)` after the docstring \u2014 is complete, feasible, and scoped appropriately. The risk is very low as it only adds what should have been there originally.\n\nSuggestions: Consider adding or verifying a unit test that calls `len()` on a Pipeline instance to prevent regression.",
+  "alternative_patch": "diff --git a/sklearn/pipeline.py b/sklearn/pipeline.py\nindex 7eaf9a46f0..fe79cfa0a1 100644\n--- a/sklearn/pipeline.py\n+++ b/sklearn/pipeline.py\n@@ -219,6 +219,12 @@ class Pipeline(_BaseComposition):\n             return self.named_steps[ind]\n         return est\n \n+    def __len__(self):\n+        \"\"\"\n+        Returns the length of the Pipeline\n+        \"\"\"\n+        return len(self.steps)\n+\n     @property\n     def _estimator_type(self):\n         return self.steps[-1][1]._estimator_type\n",
+  "alternative_label": "resolved",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "executor_guardian",
+    "communicator"
+  ],
+  "total_tokens": 14859,
+  "tokens_by_agent": {
+    "detective": 1907,
+    "fixer": 1231,
+    "fixer_guardian": 894,
+    "executor_guardian": 10827
+  },
+  "duration_seconds": 74.856,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-scikit-learn__scikit-learn-13439-synthetic_remove_critical_line-input-rep1/masops-eval/scikit-learn__scikit-learn-13439/report.json",
+  "harness_alternative_report_path": "logs/run_evaluation/eval-rodada-2-scikit-learn__scikit-learn-13439-synthetic_remove_critical_line-alt-rep1/masops-eval/scikit-learn__scikit-learn-13439/report.json",
+  "timestamp_start": "2026-05-18T22:44:09.782246+00:00",
+  "timestamp_end": "2026-05-18T22:46:18.470555+00:00",
+  "error_message": null
+}

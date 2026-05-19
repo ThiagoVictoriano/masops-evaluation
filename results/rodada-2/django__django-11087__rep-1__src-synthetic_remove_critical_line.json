@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-2-django__django-11087-rep1-synthetic_remove_critical_line-67f95c87",
+  "instance_id": "django__django-11087",
+  "repetition": 1,
+  "difficulty": "medium",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_remove_critical_line",
+  "candidate_patch_hash": "71c23bc6628ead4c",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: A syntax error is introduced in `_has_signal_listeners` due to a missing `return (` statement, leaving an unmatched closing parenthesis at the end of the expression.\n\nGuardian notes: The plan correctly identifies a syntax error (missing `return (` statement) in the `_has_signal_listeners` method in `django/db/models/deletion.py`. The fix is minimal, targeted, and directly addresses the root cause. The single step is clear and executable. The risk is low since it only restores syntactically valid Python without changing any logic.\n\nSuggestions: Consider verifying that the closing parenthesis in the expression properly matches the new opening parenthesis added by `return (`, and that indentation of subsequent lines in the multi-line expression is consistent with Django's code style.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 7779,
+  "tokens_by_agent": {
+    "detective": 5116,
+    "fixer": 1722,
+    "fixer_guardian": 941
+  },
+  "duration_seconds": 69.306,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-django__django-11087-synthetic_remove_critical_line-input-rep1/masops-eval/django__django-11087/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T23:05:09.429845+00:00",
+  "timestamp_end": "2026-05-18T23:06:49.931270+00:00",
+  "error_message": null
+}

@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-2-django__django-13212-rep1-synthetic_remove_addition-2deeda5f",
+  "instance_id": "django__django-13212",
+  "repetition": 1,
+  "difficulty": "hard",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_remove_addition",
+  "candidate_patch_hash": "0fe2fb4a8cadf9e9",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The patch in django/core/validators.py contains an incomplete statement 'raise Validation', which will cause a NameError at runtime since 'Validation' is not defined (it should be 'ValidationError'). Additionally, the 'validate' method for a form field (likely DecimalField or FloatField) was completely removed in django/forms/fields.py, breaking finite number validation.\n\nGuardian notes: The plan correctly identifies two distinct bugs: (1) an incomplete 'raise Validation' statement in django/core/validators.py that would cause a NameError, and (2) an accidentally removed 'validate' method in django/forms/fields.py that handles finite number validation. Both fixes are targeted, minimal, and directly address the root cause. The steps are clear and executable. The risk assessment is accurate \u2014 these are localized fixes with no broad architectural changes.\n\nSuggestions: Step 2 could be more specific about which class (DecimalField vs FloatField) has the missing validate method, and ideally reference the exact method signature and body to be restored (e.g., checking git history or the PR diff for the exact deleted code) to avoid guessing during implementation.; Consider verifying that existing tests for URLValidator and the relevant form field still pass after the fix, and potentially adding a regression test for the 'value' param in the ValidationError raised by URLValidator.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 6459,
+  "tokens_by_agent": {
+    "detective": 2249,
+    "fixer": 3009,
+    "fixer_guardian": 1201
+  },
+  "duration_seconds": 73.465,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-django__django-13212-synthetic_remove_addition-input-rep1/masops-eval/django__django-13212/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T23:37:49.409618+00:00",
+  "timestamp_end": "2026-05-18T23:39:33.008617+00:00",
+  "error_message": null
+}

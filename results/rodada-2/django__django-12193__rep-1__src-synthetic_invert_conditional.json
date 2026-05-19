@@ -1,0 +1,37 @@
+{
+  "execution_id": "rodada-2-django__django-12193-rep1-synthetic_invert_conditional-9f5f9228",
+  "instance_id": "django__django-12193",
+  "repetition": 1,
+  "difficulty": "easy",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_invert_conditional",
+  "candidate_patch_hash": "ab1ff44fbc49325e",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The expression `attrs = {**(attrs and {}), 'checked': True}` introduces a regression. If `attrs` is `None`, `attrs and {}` evaluates to `None`, which raises a `TypeError` when unpacked (`**None`). If `attrs` is a populated dictionary, `attrs and {}` evaluates to `{}`, causing all existing attributes (like 'id' or 'class') to be discarded. The author likely intended `attrs or {}`.\n\nGuardian notes: The plan correctly identifies the root cause (using `and` instead of `or` in the dictionary unpacking expression) and proposes a minimal, targeted fix. The single-character change from `and` to `or` addresses both failure modes: the `TypeError` when `attrs` is `None` (since `None or {}` evaluates to `{}`) and the attribute-discarding behavior when `attrs` is a populated dict (since `dict or {}` evaluates to `dict`, preserving existing keys). The fix is localized to one line in one file, making regressions extremely unlikely.\n\nSuggestions: Consider verifying that there are existing tests covering the case where attrs is passed as a populated dict to the checkbox widget's get_context, and if not, adding a regression test to prevent future recurrence.",
+  "alternative_patch": "diff --git a/django/forms/widgets.py b/django/forms/widgets.py\nindex 6fe220bea7..d83d63c169 100644\n--- a/django/forms/widgets.py\n+++ b/django/forms/widgets.py\n@@ -522,9 +522,7 @@ class CheckboxInput(Input):\n \n     def get_context(self, name, value, attrs):\n         if self.check_test(value):\n-            if attrs is None:\n-                attrs = {}\n-            attrs['checked'] = True\n+            attrs = {**(attrs or {}), 'checked': True}\n         return super().get_context(name, value, attrs)\n \n     def value_from_datadict(self, data, files, name):\n",
+  "alternative_label": "resolved",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "executor_guardian",
+    "communicator"
+  ],
+  "total_tokens": 18271,
+  "tokens_by_agent": {
+    "detective": 2558,
+    "fixer": 1865,
+    "fixer_guardian": 1074,
+    "executor_guardian": 12774
+  },
+  "duration_seconds": 130.199,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-django__django-12193-synthetic_invert_conditional-input-rep1/masops-eval/django__django-12193/report.json",
+  "harness_alternative_report_path": "logs/run_evaluation/eval-rodada-2-django__django-12193-synthetic_invert_conditional-alt-rep1/masops-eval/django__django-12193/report.json",
+  "timestamp_start": "2026-05-18T22:25:57.825003+00:00",
+  "timestamp_end": "2026-05-18T22:29:09.910288+00:00",
+  "error_message": null
+}

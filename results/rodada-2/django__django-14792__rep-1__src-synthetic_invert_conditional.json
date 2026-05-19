@@ -1,0 +1,37 @@
+{
+  "execution_id": "rodada-2-django__django-14792-rep1-synthetic_invert_conditional-ba085330",
+  "instance_id": "django__django-14792",
+  "repetition": 1,
+  "difficulty": "easy",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_invert_conditional",
+  "candidate_patch_hash": "fff126a6f6db5a0c",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: Logical operator inversion: `timezone.tzname(None) and str(timezone)` is used instead of `timezone.tzname(None) or str(timezone)`. This incorrectly returns `str(timezone)` when a `tzname` is available, defeating the purpose of the fix by reverting to the buggy Django 3.2 behavior, and returns a falsy value if `tzname` is unset.\n\nGuardian notes: The plan correctly identifies the root cause (logical operator inversion: `and` vs `or`) and proposes a minimal, targeted fix. The single-line change in `django/utils/timezone.py` directly addresses the diagnosed problem. The fix is logically sound: `or` will return `timezone.tzname(None)` when truthy and fall back to `str(timezone)` otherwise, which is the intended behavior. The plan is complete, feasible, minimal in scope, and carries very low risk of regressions.\n\nSuggestions: Consider adding or updating a unit test to verify that `_get_timezone_name` returns `tzname` when available and falls back to `str(timezone)` when `tzname` is falsy, to prevent future regressions from similar logic inversions.",
+  "alternative_patch": "diff --git a/django/utils/timezone.py b/django/utils/timezone.py\nindex bb2b6b9594..732d91645e 100644\n--- a/django/utils/timezone.py\n+++ b/django/utils/timezone.py\n@@ -73,7 +73,7 @@ def get_current_timezone_name():\n \n def _get_timezone_name(timezone):\n     \"\"\"Return the name of ``timezone``.\"\"\"\n-    return str(timezone)\n+    return timezone.tzname(None) or str(timezone)\n \n # Timezone selection functions.\n \n",
+  "alternative_label": "resolved",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "executor_guardian",
+    "communicator"
+  ],
+  "total_tokens": 9781,
+  "tokens_by_agent": {
+    "detective": 2569,
+    "fixer": 1646,
+    "fixer_guardian": 1063,
+    "executor_guardian": 4503
+  },
+  "duration_seconds": 128.109,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-django__django-14792-synthetic_invert_conditional-input-rep1/masops-eval/django__django-14792/report.json",
+  "harness_alternative_report_path": "logs/run_evaluation/eval-rodada-2-django__django-14792-synthetic_invert_conditional-alt-rep1/masops-eval/django__django-14792/report.json",
+  "timestamp_start": "2026-05-18T22:34:45.020722+00:00",
+  "timestamp_end": "2026-05-18T22:37:50.506118+00:00",
+  "error_message": null
+}

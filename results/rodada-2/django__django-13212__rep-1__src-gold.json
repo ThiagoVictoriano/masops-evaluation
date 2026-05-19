@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-2-django__django-13212-rep1-gold-5da8a92d",
+  "instance_id": "django__django-13212",
+  "repetition": 1,
+  "difficulty": "hard",
+  "repo": "django/django",
+  "candidate_patch_source": "gold",
+  "candidate_patch_hash": "e5289566e5f9bfe9",
+  "input_label": "resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The patch introduces invalid Python code in `django/core/validators.py` by replacing a valid `raise ValidationError(...)` with an incomplete `raise Validation` statement, causing a syntax/NameError. Additionally, in `django/forms/fields.py`, the `validate` method (which ensures the numeric value `is_finite()`) is removed entirely without replacement.\n\nGuardian notes: The plan correctly identifies two distinct issues: (1) a truncated/invalid `raise Validation` statement in `django/core/validators.py` that needs to be completed to `raise ValidationError(self.message, code=self.code, params={'value': value})`, and (2) a removed `validate` method in `django/forms/fields.py` that performs `is_finite()` checks. Both steps are concrete, targeted, and address the root cause directly. The plan is minimal in scope \u2014 only touching the two affected files \u2014 and the risk of regressions is low since these are restorations of previously correct code rather than new logic.\n\nSuggestions: When restoring the `validate` method in `django/forms/fields.py`, ensure the exact original method signature and body are recovered (including the `super().validate(value)` call order and the empty-value guard) to avoid subtle behavioral differences.; Consider adding a note about verifying the fix against existing test cases for URL validation and numeric field validation to confirm correctness of the restored code.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 6360,
+  "tokens_by_agent": {
+    "detective": 2933,
+    "fixer": 2202,
+    "fixer_guardian": 1225
+  },
+  "duration_seconds": 72.17,
+  "confusion_matrix_cell": "FN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-django__django-13212-gold-input-rep1/masops-eval/django__django-13212/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T23:36:06.374836+00:00",
+  "timestamp_end": "2026-05-18T23:37:49.409027+00:00",
+  "error_message": null
+}

@@ -1,0 +1,31 @@
+{
+  "execution_id": "rodada-2-sympy__sympy-20916-rep1-synthetic_expand_scope-37795c34",
+  "instance_id": "sympy__sympy-20916",
+  "repetition": 1,
+  "difficulty": "easy",
+  "repo": "sympy/sympy",
+  "candidate_patch_source": "synthetic_expand_scope",
+  "candidate_patch_hash": "c7aee7e81b352ca1",
+  "input_label": "resolved",
+  "mas_ops_decision": "approve",
+  "decided_by": "detective",
+  "justification": "Detective root_cause: No material issues found",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 0,
+  "agents_invoked": [
+    "detective_pr",
+    "communicator"
+  ],
+  "total_tokens": 2169,
+  "tokens_by_agent": {
+    "detective": 2169
+  },
+  "duration_seconds": 7.991,
+  "confusion_matrix_cell": "TP",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-sympy__sympy-20916-synthetic_expand_scope-input-rep1/masops-eval/sympy__sympy-20916/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T22:51:55.794031+00:00",
+  "timestamp_end": "2026-05-18T22:52:29.814597+00:00",
+  "error_message": null
+}

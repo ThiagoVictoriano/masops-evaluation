@@ -1,0 +1,35 @@
+{
+  "execution_id": "rodada-2-django__django-12663-rep1-synthetic_remove_addition-25da1dc6",
+  "instance_id": "django__django-12663",
+  "repetition": 1,
+  "difficulty": "medium",
+  "repo": "django/django",
+  "candidate_patch_source": "synthetic_remove_addition",
+  "candidate_patch_hash": "c9405fe4327e6092",
+  "input_label": "not_resolved",
+  "mas_ops_decision": "reject",
+  "decided_by": "fixer_guardian_loop",
+  "justification": "Detective root_cause: The `output_field` property in `Query` now assigns `self.select[0]` to a local variable `select` instead of returning its `field`. This causes the property to implicitly return `None` when `len(self.select) == 1`, which breaks query construction and evaluation that relies on resolving the output field.\n\nGuardian notes: The plan correctly identifies a missing return statement in the `output_field` property of the `Query` class. The root cause is clear: the property assigns `self.select[0]` to a local variable `select` but never returns `select.field`, causing the property to implicitly return `None`. The fix is minimal, highly localized, and directly addresses the bug. The single file modification is appropriate and the risk of regression is low since it restores expected behavior without altering any other logic.\n\nSuggestions: Consider adding a regression test that exercises the `output_field` property when `len(self.select) == 1` to prevent this class of bug from reappearing silently.",
+  "alternative_patch": null,
+  "alternative_label": "none",
+  "guardian_iterations": 1,
+  "agents_invoked": [
+    "detective_pr",
+    "fixer",
+    "fixer_guardian",
+    "communicator"
+  ],
+  "total_tokens": 5646,
+  "tokens_by_agent": {
+    "detective": 2791,
+    "fixer": 1832,
+    "fixer_guardian": 1023
+  },
+  "duration_seconds": 76.09,
+  "confusion_matrix_cell": "TN",
+  "harness_input_report_path": "logs/run_evaluation/eval-rodada-2-django__django-12663-synthetic_remove_addition-input-rep1/masops-eval/django__django-12663/report.json",
+  "harness_alternative_report_path": null,
+  "timestamp_start": "2026-05-18T23:07:27.133238+00:00",
+  "timestamp_end": "2026-05-18T23:09:14.448172+00:00",
+  "error_message": null
+}
